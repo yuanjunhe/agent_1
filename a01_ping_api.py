@@ -1,25 +1,33 @@
+# ============================================================
+# 调通 DeepSeek API
+#
+# 用 OpenAI SDK 调用 DeepSeek 的 OpenAI 兼容接口，
+# 发送一句最简单的对话，验证 API Key、网络、SDK 都没问题。
+#
+# 运行：uv run a01_ping_api.py
+# ============================================================
+
 import os
 
 from openai import OpenAI
 
 
-# 从环境变量读取 API Key
+# 1. 读取 API Key
 api_key = os.getenv("DEEPSEEK_API_KEY")
-
 if not api_key:
     raise RuntimeError(
         "没有找到 DEEPSEEK_API_KEY 环境变量"
     )
 
 
-# DeepSeek 提供 OpenAI 兼容接口
+# 2. 创建客户端（DeepSeek 提供 OpenAI 兼容接口）
 client = OpenAI(
     api_key=api_key,
     base_url="https://api.deepseek.com"
 )
 
 
-# 调用 DeepSeek V4 Flash
+# 3. 发起对话请求
 response = client.chat.completions.create(
     model="deepseek-v4-flash",
 
@@ -47,7 +55,7 @@ response = client.chat.completions.create(
 )
 
 
-# 获取模型最终回答
+# 4. 提取回答并打印
 answer = response.choices[0].message.content
 
 print("========== DeepSeek ==========")
