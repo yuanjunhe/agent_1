@@ -1,7 +1,7 @@
 # rag_1 —— 从 RAG 到 Agent 的学习记录
 
-这是一个**学习性质**的仓库，代码按"一步一个坑"的方式推进，每个 `.py` 文件就是一个学习阶段。
-主线是：
+这是一个**学习性质**的仓库，代码按"一步一个坑"的方式推进，每个 `.py` 文件就是一个学习阶段，
+文件名以 `01_`、`02_`… 序号开头，序号即学习顺序。
 
 ```
 调用大模型  →  RAG（检索增强生成）  →  Tool Calling（工具调用）  →  Agent Runtime（工具运行时）
@@ -25,7 +25,7 @@ $env:DEEPSEEK_API_KEY="你的_API_KEY"
 set DEEPSEEK_API_KEY=你的_API_KEY
 ```
 
-> **国内网络注意**：`ingest.py` / `query.py` 首次运行需要从 HuggingFace 下载
+> **国内网络注意**：`02_ingest.py` / `03_query.py` 首次运行需要从 HuggingFace 下载
 > `BAAI/bge-small-zh-v1.5` 模型，建议先设置镜像，并避免 Windows 下的编码报错：
 >
 > ```powershell
@@ -45,54 +45,58 @@ uv run python <文件名>.py
 
 | # | 文件 | 阶段 | 一句话说明 |
 |---|------|------|-----------|
-| 1 | `test_deepseek.py` | LLM 入门 | 用 OpenAI SDK 调通 DeepSeek，拿到第一个回答 |
-| 2 | `ingest.py` | RAG 前半程 | 文档 → 切分 → Embedding → 存进 ChromaDB |
-| 3 | `query.py` | RAG 后半程 | 问题 → 向量检索 → 拼 Prompt → LLM 生成答案 |
-| 4 | `tool_calling_0.py` | Tool Calling 起步 | 最小闭环：一次工具调用 + 一次结果回传 |
-| 5 | `tool_calling.py` | Tool Calling 核心 | `while True` Agent Loop，支持多轮、多工具、异常兜底 |
-| 6 | `multi_tool_calling.py` | Tool Calling 进阶 | 一次响应返回多个工具调用，遍历执行 |
-| 7 | `async_tool_calling.py` | 异步 | `asyncio.gather` 并行执行多个工具 |
-| 8 | `tool_registry.py` | Agent 架构 | 抽出 Tool Registry + Dispatcher，LLM 只认名字 |
-| 9 | `tool_validation.py` | Agent 健壮性 | 参数校验：缺参数、类型不对都要拦住 |
-| 10 | `tool_runtime.py` | Agent 运行时 | 超时 + 重试 + 异常处理，工具执行不再拖垮整个 Agent |
-| 11 | `rag_agent.py` | 合流 | 把 RAG 检索封装成 `search_knowledge` 工具，交给 Agent 自己决定何时查库 |
-| 12 | `agent.py` | 有状态的 Agent | `AgentState` 外置给 `main()` + 多轮对话 + `MAX_STEPS`，工具集 4 个（当前进度） |
+| 1 | `01_test_deepseek.py` | LLM 入门 | 用 OpenAI SDK 调通 DeepSeek，拿到第一个回答 |
+| 2 | `02_ingest.py` | RAG 前半程 | 文档 → 切分 → Embedding → 存进 ChromaDB |
+| 3 | `03_query.py` | RAG 后半程 | 问题 → 向量检索 → 拼 Prompt → LLM 生成答案 |
+| 4 | `04_tool_calling_0.py` | Tool Calling 起步 | 最小闭环：一次工具调用 + 一次结果回传 |
+| 5 | `05_tool_calling.py` | Tool Calling 核心 | `while True` Agent Loop，支持多轮、多工具、异常兜底 |
+| 6 | `06_multi_tool_calling.py` | Tool Calling 进阶 | 一次响应返回多个工具调用，遍历执行 |
+| 7 | `07_async_tool_calling.py` | 异步 | `asyncio.gather` 并行执行多个工具 |
+| 8 | `08_tool_registry.py` | Agent 架构 | 抽出 Tool Registry + Dispatcher，LLM 只认名字 |
+| 9 | `09_tool_validation.py` | Agent 健壮性 | 参数校验：缺参数、类型不对都要拦住 |
+| 10 | `10_tool_runtime.py` | Agent 运行时 | 超时 + 重试 + 异常处理，工具执行不再拖垮整个 Agent |
+| 11 | `11_rag_agent.py` | 合流 | 把 RAG 检索封装成 `search_knowledge` 工具，交给 Agent 自己决定何时查库 |
+| 12 | `12_agent.py` | 有状态的 Agent | `AgentState` 外置给 `main()` + 多轮对话 + `MAX_STEPS`，工具集 4 个 |
+| 13 | `13_summary_memory.py` | 摘要记忆 | 消息超过阈值就滚动摘要压缩历史，突破上下文上限（当前进度） |
 
-依赖关系大致是（RAG 提供"知识"，Tool Calling 提供"手脚"，最后的 `agent.py` 是两条线合流）：
+依赖关系大致是（RAG 提供"知识"，Tool Calling 提供"手脚"，两条线在 `12_agent.py` 合流，合流之后的 `13_summary_memory.py` 再加记忆管理）：
 
 ```
-                       ┌── RAG 线 ───────────────────────────┐
-test_deepseek.py ──►   │   ingest.py ──► query.py            │
-                       │                     │               │
-                       │                     └──► rag_agent.py ──┐
-                       ├── Tool 线 ──────────────────────────────┼───┐
-                       │   tool_calling_0.py                     │   │
-                       │        │                                │   │
-                       │        ├──► tool_calling.py ──► multi_tool_calling.py
-                       │        │                             │      │
-                       │        │                             ▼      │
-                       │        │                    async_tool_calling.py
-                       │        │                             │      │
-                       │        └─────────────────────────────┴──► tool_registry.py
-                       │                                            │
-                       │                                            ▼
-                       │                                  tool_validation.py
-                       │                                            │
-                       │                                            ▼
-                       │                                    tool_runtime.py
-                       └────────────────────────────────────────────┼───┘
-                                                                    ▼
-                                                                agent.py
+                          ┌────── RAG 线 ────────────────────────────────┐
+01_test_deepseek.py ──►   │ 02_ingest.py ──► 03_query.py                │
+                          │                       │                     │
+                          │                       └──► 11_rag_agent.py ────────────────────────┐
+                          ├── Tool 线 ─────────────────────────────────────────────────────────┼───┐
+                          │ 04_tool_calling_0.py                                              │   │
+                          │       │                                                           │   │
+                          │       ├──► 05_tool_calling.py ──► 06_multi_tool_calling.py        │   │
+                          │       │                                 │                         │   │
+                          │       │                                 ▼                         │   │
+                          │       │                      07_async_tool_calling.py             │   │
+                          │       │                                 │                         │   │
+                          │       └─────────────────────────────────┴ ──► 08_tool_registry.py │   │
+                          │                                                       │           │   │
+                          │                                                       ▼           │   │
+                          │                                             09_tool_validation.py │   │
+                          │                                                       │           │   │
+                          │                                                       ▼           │   │
+                          │                                               10_tool_runtime.py  │   │
+                          └───────────────────────────────────────────────────────┼───────────┤───┘
+                                                                                  ▼
+                                                                             12_agent.py
+                                                                                  │
+                                                                                  ▼
+                                                                        13_summary_memory.py
 ```
 
-> 注意 `agent.py` **同时踩在两条线上**：它 `from rag_agent import search_knowledge`，
-> 所以运行它之前必须先跑过 `ingest.py`（否则连 ChromaDB 的 collection 都取不到）。
+> 注意 `12_agent.py` 和 `13_summary_memory.py` **同时踩在两条线上**：它们都用 `importlib.import_module("11_rag_agent")` 拿到 `search_knowledge`，
+> 所以运行之前必须先跑过 `02_ingest.py`（否则连 ChromaDB 的 collection 都取不到）。
 
 ---
 
 ## 文件详解
 
-### 1. `test_deepseek.py` —— 第一步：把大模型调通
+### 1. `01_test_deepseek.py` —— 第一步：把大模型调通
 
 **学习目标**：HTTP 调用大模型到底长什么样。
 
@@ -106,7 +110,7 @@ test_deepseek.py ──►   │   ingest.py ──► query.py            │
 
 ---
 
-### 2. `ingest.py` —— RAG 的"入库"半边
+### 2. `02_ingest.py` —— RAG 的"入库"半边
 
 **学习目标**：把私有文档变成可以"按语义搜索"的向量库。
 
@@ -128,18 +132,18 @@ data/*.txt
 |------|-----|------|
 | `CHUNK_SIZE` | 200 | 每个片段 200 字符（学习阶段用字符数，生产上一般按 token） |
 | `CHUNK_OVERLAP` | 50 | 相邻片段重叠 50 字符，避免知识点被切断 |
-| `COLLECTION_NAME` | `java_knowledge` | 必须和 `query.py` 保持一致 |
+| `COLLECTION_NAME` | `java_knowledge` | 必须和 `03_query.py` 保持一致 |
 | `CHROMA_DIR` | `chroma_db/` | `PersistentClient` 持久化，关掉程序数据还在 |
 
 > 关键认知：**RAG 的检索不是关键词匹配，而是向量距离**。
 > 切分策略（chunk size / overlap）直接决定检索质量。
 
 数据源：`data/jvm.txt`、`data/mysql.txt`、`data/thread.txt`（Java 知识库）。
-注意 `data/` 和 `chroma_db/` 都在 `.gitignore` 里，换机器要重新跑一次 `ingest.py`。
+注意 `data/` 和 `chroma_db/` 都在 `.gitignore` 里，换机器要重新跑一次 `02_ingest.py`。
 
 ---
 
-### 3. `query.py` —— RAG 的"问答"半边
+### 3. `03_query.py` —— RAG 的"问答"半边
 
 **学习目标**：检索出来的片段，怎么变成大模型的答案。
 
@@ -165,7 +169,7 @@ data/*.txt
 
 ---
 
-### 4. `tool_calling_0.py` —— 最小的工具调用闭环
+### 4. `04_tool_calling_0.py` —— 最小的工具调用闭环
 
 **学习目标**：搞懂 Tool Calling 里到底谁在干活。
 
@@ -183,7 +187,7 @@ data/*.txt
 
 ---
 
-### 5. `tool_calling.py` —— Agent Loop（本仓库的核心文件）
+### 5. `05_tool_calling.py` —— Agent Loop（本仓库的核心文件）
 
 **学习目标**：从"一次问答"升级成"会自己干活的循环"。
 
@@ -205,7 +209,7 @@ data/*.txt
 
 ---
 
-### 6. `multi_tool_calling.py` —— 一次响应，多个工具
+### 6. `06_multi_tool_calling.py` —— 一次响应，多个工具
 
 **学习目标**：理解 `message.tool_calls` 是**列表**这件事。
 
@@ -214,12 +218,12 @@ data/*.txt
 - 明确写出 `tool_choice="auto"`，让模型自己决定要不要用工具
 - 这一版是**串行**执行（for 循环），而且去掉了异常处理，代码更短、更聚焦
 
-> 对比 `tool_calling.py`：那个版本讲"循环和容错"，这个版本讲"一次多个"。
+> 对比 `05_tool_calling.py`：那个版本讲"循环和容错"，这个版本讲"一次多个"。
 > 但串行执行有个明显问题——两个各要 2 秒的工具，就要等 4 秒，于是有了下一个文件。
 
 ---
 
-### 7. `async_tool_calling.py` —— 并行执行工具
+### 7. `07_async_tool_calling.py` —— 并行执行工具
 
 **学习目标**：用 `async/await` 把工具执行时间从"求和"变成"取最大值"。
 
@@ -239,7 +243,7 @@ data/*.txt
 
 ---
 
-### 8. `tool_registry.py` —— 把调度逻辑抽出来
+### 8. `08_tool_registry.py` —— 把调度逻辑抽出来
 
 **学习目标**：从"能跑"到"有架构"。
 
@@ -269,7 +273,7 @@ results = await asyncio.gather(*[dispatch_tool(tc) for tc in message.tool_calls]
 
 ---
 
-### 9. `tool_validation.py` —— 参数校验
+### 9. `09_tool_validation.py` —— 参数校验
 
 **学习目标**：不信任 LLM 传来的参数。
 
@@ -292,7 +296,7 @@ JSON 解析 → 查注册表 → 参数校验 → 执行工具
 
 ---
 
-### 10. `tool_runtime.py` —— 工具运行时
+### 10. `10_tool_runtime.py` —— 工具运行时
 
 **学习目标**：工具会慢、会挂，Agent 不能跟着一起挂。
 
@@ -314,14 +318,14 @@ JSON 解析 → 查注册表 → 参数校验 → 执行工具
 
 ---
 
-### 11. `rag_agent.py` —— 把 RAG 变成一个 Tool（两条线合流）
+### 11. `11_rag_agent.py` —— 把 RAG 变成一个 Tool（两条线合流）
 
 **学习目标**：之前 RAG 是"写死的流程"（问题 → 检索 → 拼接 → 生成），
 现在要让它变成"Agent 自己决定要不要用"的一个工具。
 
 关键转变在于**谁来决定检索**：
 
-| | `query.py`（写死的 RAG） | `rag_agent.py`（Tool 化的 RAG） |
+| | `03_query.py`（写死的 RAG） | `11_rag_agent.py`（Tool 化的 RAG） |
 |---|---|---|
 | 检索时机 | 每个问题都检索，无条件 | LLM 判断需要知识库时才调用 |
 | 检索次数 | 固定 1 次 | 可以多次（换个说法再查一遍） |
@@ -331,7 +335,7 @@ JSON 解析 → 查注册表 → 参数校验 → 执行工具
 四个部分拼起来就是完整的 RAG Tool：
 
 ```
-① search_knowledge(query)   原 query.py 的检索逻辑，返回拼好的字符串
+① search_knowledge(query)   原 03_query.py 的检索逻辑，返回拼好的字符串
 ② TOOL_REGISTRY             工具名 → Python 函数（给 Python 用）
 ③ TOOLS                     工具名 + 描述 + 参数 Schema（给 LLM 用）
 ④ dispatch_tool             查表 → 执行 → 失败转成字符串（不抛异常）
@@ -354,12 +358,12 @@ System Prompt 里明确写了三条约束：需要知识库就调 `search_knowle
 > 一旦以后把工具改成并发（`asyncio.gather`），这个同步调用会变成串行瓶颈。
 > 真要异步化，得用 `run_in_executor` 包一层，或者换成异步的 embedding 接口。
 
-运行前必须已经跑过 `ingest.py`（要连 `chroma_db/` 里的 `java_knowledge`），
-而且这里用的是 `deepseek-chat`（不是 `test_deepseek.py` 里的 flash 模型）。
+运行前必须已经跑过 `02_ingest.py`（要连 `chroma_db/` 里的 `java_knowledge`），
+而且这里用的是 `deepseek-chat`（不是 `01_test_deepseek.py` 里的 flash 模型）。
 
 ---
 
-### 12. `agent.py` —— 有状态的 Agent：多轮对话（当前进度）
+### 12. `12_agent.py` —— 有状态的 Agent：多轮对话
 
 **学习目标**：让 Agent 从"一问一答就退出"变成"记住上下文、能连着聊"。
 
@@ -419,16 +423,17 @@ for step in range(MAX_STEPS):
 
 **变化四：工具集扩到 4 个**
 
-- `add` / `multiply` / `subtract` —— 在 `agent.py` 里**本地重新定义**（同步函数）。
-  没有复用 `tool_runtime.py` 里那套 async 版本，因为那边带超时/重试，会干扰"看清主循环"这件事。
-- `search_knowledge` —— 真正 `import` 过来的，`from rag_agent import search_knowledge`。
+- `add` / `multiply` / `subtract` —— 在 `12_agent.py` 里**本地重新定义**（同步函数）。
+  没有复用 `10_tool_runtime.py` 里那套 async 版本，因为那边带超时/重试，会干扰"看清主循环"这件事。
+- `search_knowledge` —— 从 `11_rag_agent.py` 动态加载（模块名以数字开头，普通 `from ... import` 是语法错误）：
+  `search_knowledge = importlib.import_module("11_rag_agent").search_knowledge`。
 
 于是**计算和知识库第一次出现在同一个 Agent 里**，系统提示也相应写了
 "任务需要多个步骤时，可以连续调用多个工具"——可以试试
 *"JVM 有几个运行时数据区，再乘以 3 等于多少"* 这种既查库又计算的复合问题。
 
 > 关键认知：**Agent Loop 必须能停下来**。退出条件不止一个：
-> ① LLM 不再要求调工具（正常完成）——`tool_calling.py` 起就有；
+> ① LLM 不再要求调工具（正常完成）——`05_tool_calling.py` 起就有；
 > ② 达到 `MAX_STEPS`（防死循环）——从上一版起有了；
 > ③ 用户主动退出——外层 `exit` 只能结束**会话**，单轮任务跑到一半是没法中断的；
 > ④ 超时预算（生产环境还要有）——尚未实现。
@@ -451,10 +456,89 @@ if not message.tool_calls:
 
 同样地，`MAX_STEPS` 用尽时返回的兜底文案也没有入历史。
 
-> 另外注意这一版**把之前学的东西回退了**：没有参数校验（`tool_validation.py`）、
-> 没有超时重试（`tool_runtime.py`）、工具也是**串行**执行（`for` 循环，不是 `gather`）。
+> 这两个问题在 `13_summary_memory.py` 里修掉了第一个：assistant 消息的 `append` 挪到了
+> 分支判断**之前**，无论有没有 `tool_calls` 都先入历史（为什么必须这样，见第 13 节）。
+> 第二个（兜底文案不入历史）至今仍在，留给后续处理。
+
+> 另外注意这一版**把之前学的东西回退了**：没有参数校验（`09_tool_validation.py`）、
+> 没有超时重试（`10_tool_runtime.py`）、工具也是**串行**执行（`for` 循环，不是 `gather`）。
 > 这是学习仓库的常态——每个文件只聚焦一个新概念。
-> 把 `agent.py` 当成"框架骨架"，真要生产化，得把 8~10 号文件的 Dispatcher 换回来。
+> 把 `12_agent.py` 当成"框架骨架"，真要生产化，得把 8~10 号文件的 Dispatcher 换回来。
+
+---
+
+### 13. `13_summary_memory.py` —— 摘要记忆：压缩对话历史（当前进度）
+
+**学习目标**：多轮对话下 `state.messages` 只增不减，聊久了必然顶到模型的上下文上限。
+把早期历史摘要成一段文本，用它替代被裁掉的原始消息。
+
+文件从 `12_agent.py` 复制而来，工具、Dispatcher、两层循环的结构都沿用，新增的是"记忆管理"这一层。
+
+**变化一：`AgentState` 多了一个 `summary` 字段**
+
+```python
+@dataclass
+class AgentState:
+    messages: list = field(default_factory=list)   # 最近消息原文
+    summary: str = ""                              # 更早历史的压缩版
+```
+
+从此"记忆"分成两层：**`messages` 存最近原文，`summary` 存更早历史的摘要**。
+真正发给模型的上下文由 `build_context()` 组装：
+system prompt + 摘要（包装成一条 system 消息）+ 最近消息。
+
+**变化二：滚动摘要（`update_summary` → `summarize_messages`）**
+
+每轮任务结束后检查一次：消息数超过 `SUMMARY_TRIGGER` 才触发。
+常量都调得很小（`MAX_STEPS=5`、`SUMMARY_TRIGGER=4`、`KEEP_RECENT=2`），
+为的是聊几轮就能亲眼看到摘要被触发。
+
+```
+messages[0]              system，永远保留
+messages[1:split]        旧消息 ──► 交给 LLM 总结成新摘要，然后删掉
+messages[split:]         最近 KEEP_RECENT 条上下 ──► 原样保留
+```
+
+总结不是从零开始：prompt 里带着**已有的旧摘要**，让模型在旧摘要上叠加新内容——
+所以叫"滚动摘要"，最老的信息被逐轮压缩，而不是每轮全量重算。
+Prompt 明确列了要保留的东西：用户个人信息、技术背景、学习目标、已完成的事、
+偏好、未完成的任务、重要上下文，并要求"不要编造信息"。
+总结完会打印一份 `Summary Memory` 边框日志，方便肉眼确认压缩掉了什么。
+
+总结**什么**也有讲究：只收 user / assistant 里**非空**的消息，tool 结果不参与——
+一次性的中间产物不值得长期记住，值得记的"结论"已经写在 assistant 的回复里了。
+
+**变化三：切分点必须落在 user 消息边界（`find_summary_split`）**
+
+这是本文件最大的坑。如果按 `messages[-KEEP_RECENT:]` 固定下标切，很容易切在
+assistant(tool_calls) 和它对应的 tool 消息**中间**，产生两种非法状态：
+
+- 保留窗口以 tool 消息开头 → tool 消息找不到对应的 tool_calls，下一次请求直接被 API 拒绝
+- tool_calls 被总结掉、只剩 tool 结果 → 同样被拒
+
+所以切分点要**从尾部向前回溯到最近的 user 消息**，保证落在完整轮次的边界上，
+代价是保留的消息可能略多于 `KEEP_RECENT`。
+（提交记录里做过属性测试：随机构造 16,313 个多轮对话样本，
+旧的固定下标切法约 72% 产生非法消息列表，回溯到 user 边界后为 0。）
+
+**顺手修掉的 `12_agent.py` 遗留问题**
+
+- **assistant 回复入历史**：`state.messages.append(message)` 挪到 `if not message.tool_calls`
+  分支判断**之前**，无论有没有 tool_calls 都先保存（就是上一节那个"已知遗留问题"）。
+  对摘要功能尤其致命：带 tool_calls 的 assistant 消息 content 为 None，
+  如果最终回答不进历史，`summarize_messages` 里连一句 assistant 内容都收集不到
+- **`step` / `finished` 在进入 `agent()` 时重置**：`12_agent.py` 靠改成 `for` 循环解决跨轮累加，
+  这里换回 `while` + 入口处重置，效果等价；不重置的话第二轮起 `finished` 永远是 `True`
+- **工具参数解析失败不再崩**：`json.loads` 抛 `JSONDecodeError` 时，把错误文本当成
+  tool 结果交回模型，让它自己纠正
+- **主循环跳过空输入**，避免把空消息发给模型
+- **抽出 `message_role` / `message_content`**：`state.messages` 里混着 dict（自己构造的
+  user/tool 消息）和 SDK 对象（assistant 消息），统一读取，摘要逻辑不用到处 `isinstance`
+
+> 关键认知：**摘要本身就是一次 LLM 调用，压缩记忆是有成本的**。
+> 触发阈值太低会频繁烧 Token，太高则失去压缩意义；生产上一般按 token 数
+> 而不是消息条数来触发。另外 `MAX_STEPS` 兜底文案至今仍未入历史，
+> `finished` 也依旧只是被赋值没被消费——这两个坑留给了下个阶段。
 
 ---
 
@@ -462,22 +546,25 @@ if not message.tool_calls:
 
 | 概念 | 出现在 | 一句话 |
 |------|--------|--------|
-| `tool_call_id` | `tool_calling_0.py` 起 | 把工具结果和对应的那次调用绑定 |
-| `role="tool"` 消息 | `tool_calling_0.py` 起 | 工具结果回灌给 LLM 的唯一格式 |
-| Agent Loop | `tool_calling.py` | `while True` 直到 LLM 不再要求调用工具 |
-| Tool Schema vs Registry | `tool_registry.py` | 给 LLM 看的说明书 vs 给 Python 用的查找表 |
-| Dispatcher | `tool_registry.py` | 解析 → 查表 → 校验 → 执行 → 包装结果 |
-| 参数校验 | `tool_validation.py` | 在错误进入业务代码前拦住它 |
-| 超时 + 重试 | `tool_runtime.py` | 工具会挂，Agent 不能跟着挂 |
-| `asyncio.gather` | `async_tool_calling.py` | 多个工具并发执行，耗时取最大值 |
-| Chunk / Overlap | `ingest.py` | 检索的最小单位，重叠是为了不切断语义 |
-| Top-K | `query.py` | 每次检索喂给 LLM 的知识片段数量 |
-| RAG as a Tool | `rag_agent.py` | 检索从"写死的流程"变成"LLM 决定要不要调的工具" |
-| Tool 返回值即 Prompt | `rag_agent.py` | 工具返回的文本会直接喂给 LLM，怎么拼就是怎么写 Prompt |
-| `AgentState` | `agent.py` | Agent = 一份状态 + 一个推进状态的循环 |
-| State 外置 | `agent.py` | 谁创建、谁持有 state —— 从"一次性脚本"到"常驻服务" |
-| 多轮对话 | `agent.py` | 记忆 = 历史消息全留在 `state.messages` 里，没有别的魔法 |
-| `MAX_STEPS` | `agent.py` | 防止 LLM 陷入工具死循环烧 Token 的刹车 |
+| `tool_call_id` | `04_tool_calling_0.py` 起 | 把工具结果和对应的那次调用绑定 |
+| `role="tool"` 消息 | `04_tool_calling_0.py` 起 | 工具结果回灌给 LLM 的唯一格式 |
+| Agent Loop | `05_tool_calling.py` | `while True` 直到 LLM 不再要求调用工具 |
+| Tool Schema vs Registry | `08_tool_registry.py` | 给 LLM 看的说明书 vs 给 Python 用的查找表 |
+| Dispatcher | `08_tool_registry.py` | 解析 → 查表 → 校验 → 执行 → 包装结果 |
+| 参数校验 | `09_tool_validation.py` | 在错误进入业务代码前拦住它 |
+| 超时 + 重试 | `10_tool_runtime.py` | 工具会挂，Agent 不能跟着挂 |
+| `asyncio.gather` | `07_async_tool_calling.py` | 多个工具并发执行，耗时取最大值 |
+| Chunk / Overlap | `02_ingest.py` | 检索的最小单位，重叠是为了不切断语义 |
+| Top-K | `03_query.py` | 每次检索喂给 LLM 的知识片段数量 |
+| RAG as a Tool | `11_rag_agent.py` | 检索从"写死的流程"变成"LLM 决定要不要调的工具" |
+| Tool 返回值即 Prompt | `11_rag_agent.py` | 工具返回的文本会直接喂给 LLM，怎么拼就是怎么写 Prompt |
+| `AgentState` | `12_agent.py` | Agent = 一份状态 + 一个推进状态的循环 |
+| State 外置 | `12_agent.py` | 谁创建、谁持有 state —— 从"一次性脚本"到"常驻服务" |
+| 多轮对话 | `12_agent.py` | 记忆 = 历史消息全留在 `state.messages` 里，没有别的魔法 |
+| `MAX_STEPS` | `12_agent.py` | 防止 LLM 陷入工具死循环烧 Token 的刹车 |
+| Summary Memory | `13_summary_memory.py` | 记忆 = 最近消息原文 + 更早历史的摘要，发送前由 `build_context` 拼接 |
+| 滚动摘要 | `13_summary_memory.py` | 新摘要 = summarize(旧摘要 + 被裁掉的旧消息)，逐轮压缩而非全量重算 |
+| 摘要切分边界 | `13_summary_memory.py` | 切分点必须落在 user 消息上，否则拆散 tool_calls / tool 配对，请求直接报错 |
 
 ---
 
@@ -485,25 +572,28 @@ if not message.tool_calls:
 
 ```bash
 # 1. 建库（改过 data/ 里的文档后要重新跑）
-uv run python ingest.py
+uv run python 02_ingest.py
 
 # 2. 交互式问答（依赖上一步生成的 chroma_db/）
-uv run python query.py
+uv run python 03_query.py
 
 # 3. 按学习顺序跑工具调用示例
-uv run python tool_calling_0.py
-uv run python tool_calling.py
-uv run python multi_tool_calling.py
-uv run python async_tool_calling.py
-uv run python tool_registry.py
-uv run python tool_validation.py
-uv run python tool_runtime.py
+uv run python 04_tool_calling_0.py
+uv run python 05_tool_calling.py
+uv run python 06_multi_tool_calling.py
+uv run python 07_async_tool_calling.py
+uv run python 08_tool_registry.py
+uv run python 09_tool_validation.py
+uv run python 10_tool_runtime.py
 
 # 4. 合流：把 RAG 当成工具交给 Agent（依赖第 1 步建好的库）
-uv run python rag_agent.py
+uv run python 11_rag_agent.py
 
 # 5. 完整的 Agent：算术工具 + 知识库工具，多轮对话，输入 exit 退出
-uv run python agent.py
+uv run python 12_agent.py
+
+# 6. 摘要记忆版 Agent：多聊几轮，观察 Summary Memory 的输出（依赖第 1 步建好的库）
+uv run python 13_summary_memory.py
 ```
 
 ---
@@ -512,24 +602,26 @@ uv run python agent.py
 
 ```
 rag_1/
-├── data/               # 原始知识库文档（jvm / mysql / thread），已 gitignore
-├── chroma_db/          # ChromaDB 持久化数据，由 ingest.py 生成，已 gitignore
-├── src/rag_1/          # uv 项目模板自带，暂无实际内容
-├── ingest.py           # ① RAG：建库
-├── query.py            # ② RAG：检索 + 生成
-├── test_deepseek.py    # ⓪ LLM 调用入门
-├── tool_calling_0.py   # ③ 最小工具调用
-├── tool_calling.py     # ④ Agent Loop
-├── multi_tool_calling.py    # ⑤ 多工具调用
-├── async_tool_calling.py    # ⑥ 异步并行
-├── tool_registry.py    # ⑦ Registry + Dispatcher
-├── tool_validation.py  # ⑧ 参数校验
-├── tool_runtime.py     # ⑨ 超时 / 重试
-├── rag_agent.py        # ⑩ RAG 封装成 Tool，两线合流
-├── agent.py            # ⑪ 有状态 Agent：多轮对话 + MAX_STEPS（当前进度）
-└── pyproject.toml      # 依赖：openai / chromadb / sentence-transformers
+├── data/                      # 原始知识库文档（jvm / mysql / thread），已 gitignore
+├── chroma_db/                 # ChromaDB 持久化数据，由 02_ingest.py 生成，已 gitignore
+├── src/rag_1/                 # uv 项目模板自带，暂无实际内容
+├── 01_test_deepseek.py        # ⓪ LLM 调用入门
+├── 02_ingest.py               # ① RAG：建库
+├── 03_query.py                # ② RAG：检索 + 生成
+├── 04_tool_calling_0.py       # ③ 最小工具调用
+├── 05_tool_calling.py         # ④ Agent Loop
+├── 06_multi_tool_calling.py   # ⑤ 多工具调用
+├── 07_async_tool_calling.py   # ⑥ 异步并行
+├── 08_tool_registry.py        # ⑦ Registry + Dispatcher
+├── 09_tool_validation.py      # ⑧ 参数校验
+├── 10_tool_runtime.py         # ⑨ 超时 / 重试
+├── 11_rag_agent.py            # ⑩ RAG 封装成 Tool，两线合流
+├── 12_agent.py                # ⑪ 有状态 Agent：多轮对话 + MAX_STEPS
+├── 13_summary_memory.py       # ⑫ 摘要记忆：历史消息滚动摘要压缩（当前进度）
+└── pyproject.toml             # 依赖：openai / chromadb / sentence-transformers
 ```
 
-> 提示：`agent.py` 会 `import rag_agent`，而 `rag_agent.py` 在**导入时**
+> 提示：`12_agent.py` 和 `13_summary_memory.py` 都会动态加载 `11_rag_agent.py`，而它在**导入时**
 > 就加载 Embedding 模型并连接 ChromaDB。所以即使你只想试算术工具，
-> 也必须先跑过 `ingest.py`，否则导入阶段就会报 collection 不存在。
+> 也必须先跑过 `02_ingest.py`，否则导入阶段就会报 collection 不存在。
+> （模块名以数字开头装不进普通 import 语句，所以代码里用的是 `importlib`。）

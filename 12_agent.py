@@ -1,11 +1,19 @@
 import os
 import json
 import asyncio
+import importlib
 
 from dataclasses import dataclass, field
 from openai import AsyncOpenAI
 
-from rag_agent import search_knowledge
+# ------------------------------------------------------------
+# 本文件带序号前缀（11_rag_agent.py），模块名不能以数字开头，
+# 普通的 import / from ... import 语句在这里是语法错误，
+# 所以只能用 importlib 按字符串动态加载。
+# 代价是失去了静态类型检查，收益是文件名本身就能体现学习顺序。
+# ------------------------------------------------------------
+
+search_knowledge = importlib.import_module("11_rag_agent").search_knowledge
 
 
 # ============================================================

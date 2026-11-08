@@ -54,7 +54,7 @@ BASE_DIR = Path(__file__).parent
 # ChromaDB 数据目录
 CHROMA_DIR = BASE_DIR / "chroma_db"
 
-# 必须和 ingest.py 使用相同的 Collection
+# 必须和 02_ingest.py 使用相同的 Collection
 COLLECTION_NAME = "java_knowledge"
 
 # 必须使用和入库时相同的 Embedding 模型

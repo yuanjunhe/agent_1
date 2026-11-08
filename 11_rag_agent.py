@@ -43,7 +43,7 @@ chroma_client = chromadb.PersistentClient(
 # ============================================================
 # 4. 获取之前创建的知识库 Collection
 #
-# collection 名称也必须和你之前 ingest.py 使用的一致。
+# collection 名称也必须和你之前 02_ingest.py 使用的一致。
 # ============================================================
 
 collection = chroma_client.get_collection(
