@@ -3,7 +3,7 @@
 
 ```
 调通 LLM → RAG（建库 / 检索问答）→ Tool Calling（闭环 / 循环 / 并行 / 架构 / 健壮性）
-        → 两条线合流 → 有状态多轮 Agent → 摘要记忆 → 长期记忆提取
+        → 两条线合流 → 有状态多轮 Agent → 摘要记忆 → 长期记忆提取 → 记忆存储
 ```
 
 ---
@@ -26,6 +26,7 @@
 | 12 | `a12_agent.py` | 有状态的 Agent | `AgentState` 外置 + 多轮对话 + `MAX_STEPS` |
 | 13 | `a13_summary_memory.py` | 摘要记忆 | 消息超阈值就滚动摘要压缩历史 |
 | 14 | `a14_memory_extractor.py` | 长期记忆提取 | LLM 从用户消息里提取值得长期保存的信息（当前进度） |
+| 15 | `a14_memory.py` | 记忆存储 | SQLite 存取提取出的记忆，按 `user_id` 隔离 |
 
 ---
 
@@ -185,9 +186,21 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 - **提取规则写进 Prompt**：正例（姓名/职业/长期兴趣/偏好/目标/进行中的重要项目）和反例（一次性计算、闲聊、临时问题）都明确列出，边界靠规则约束
 - **结构化输出**：要求 LLM 只输出 JSON 数组；`json.loads` 解析失败或结果不是数组时降级返回 `[]`，不让坏输出崩掉调用方
 - **测试脚本**：`a14_test_memory_extractor.py` 用 6 条消息验证——4 条个人信息应提取，计算和闲聊应返回 `[]`
+- **入库函数**：`save_user_memory()` 把提取和存储串起来——先调 `extract_memories()`，再逐条 `store.add()` 写库
 
 > 关键认知：**提取 = 让 LLM 做分类 + 结构化输出**；和 a13 的摘要对比——摘要是"有损压缩自己的历史"，提取是"从消息里筛出要永久保存的事实"。
 > 注意：本文件只做"提取"这一步，记忆的存储和召回（写入向量库 / 注入 system prompt）是后续步骤。
+
+### 15. `a14_memory.py` —— 记忆存储
+
+提取出的记忆要落到磁盘才能跨会话使用。`MemoryStore` 用 SQLite 做最简单的持久层：
+
+- **表结构只有三列**：`id`（自增主键）、`user_id`（谁的记忆）、`content`（记忆内容），建表语句 `CREATE TABLE IF NOT EXISTS` 保证重复初始化不报错
+- **按用户隔离**：`add(user_id, content)` 写入、`list(user_id)` 按 `user_id` 过滤按序读出，不同用户的记忆互不可见
+- **测试脚本**：`a14_test_long_term_memory.py` 串起完整链路：5 条用户消息 → 逐条提取 → 写库 → 打印该用户的全部记忆，跑完会在当前目录生成 `agent_memory.db`（已 gitignore）
+
+> 关键认知：**长期记忆 = 提取（LLM 决定存什么）+ 存储（数据库负责持久和隔离）**；SQLite 一个文件就是一套方案，够用就不上向量库。
+> 注意：记忆的"召回"（对话开始时把记忆注入 system prompt）是下一步。
 
 ---
 
@@ -206,6 +219,7 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 | Summary Memory | 记忆 = 最近消息原文 + 更早历史的滚动摘要，发送前由 `build_context` 拼接 |
 | 摘要切分边界 | 切分点必须落在 user 消息上，否则拆散 tool_calls/tool 配对，请求报错 |
 | Memory Extractor | 用 Prompt 规则 + JSON 输出，从用户消息里筛出值得跨会话保存的事实 |
+| `MemoryStore` | SQLite 存取长期记忆，`user_id` 隔离不同用户 |
 
 
 ---
