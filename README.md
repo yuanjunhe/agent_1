@@ -3,7 +3,7 @@
 
 ```
 调通 LLM → RAG（建库 / 检索问答）→ Tool Calling（闭环 / 循环 / 并行 / 架构 / 健壮性）
-        → 两条线合流 → 有状态多轮 Agent → 摘要记忆 → 长期记忆提取 → 记忆存储
+        → 两条线合流 → 有状态多轮 Agent → 摘要记忆 → 长期记忆提取 → 记忆存储 → 记忆检索 + 记忆注入
 ```
 
 ---
@@ -25,8 +25,11 @@
 | 11 | `a11_rag_agent.py` | 合流 | RAG 检索封装成工具，LLM 自己决定何时查库 |
 | 12 | `a12_agent.py` | 有状态的 Agent | `AgentState` 外置 + 多轮对话 + `MAX_STEPS` |
 | 13 | `a13_summary_memory.py` | 摘要记忆 | 消息超阈值就滚动摘要压缩历史 |
-| 14 | `a14_memory_extractor.py` | 长期记忆提取 | LLM 从用户消息里提取值得长期保存的信息（当前进度） |
+| 14 | `a14_memory_extractor.py` | 长期记忆提取 | LLM 从用户消息里提取值得长期保存的信息 |
 | 15 | `a14_memory.py` | 记忆存储 | SQLite 存取提取出的记忆，按 `user_id` 隔离 |
+| 16 | `a15_memory.py` | 记忆存储升级 | 完整 CRUD：分类字段 + 时间戳 + 索引 + 关键词搜索 |
+| 17 | `a15_memory_retriever.py` | 记忆检索 | LLM 从问题提取关键词，多关键词查库去重（当前进度） |
+| 18 | `a15_agent_memory_demo.py` | 记忆注入 Agent | 检索到的长期记忆注入 system prompt，按记忆回答 |
 
 ---
 
@@ -178,7 +181,7 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 
 > 关键认知：**摘要本身也是一次 LLM 调用，压缩记忆有成本**；生产上按 token 数而非消息条数触发。
 
-### 14. `a14_memory_extractor.py` —— 长期记忆提取（当前进度）
+### 14. `a14_memory_extractor.py` —— 长期记忆提取
 
 摘要记忆只记住"聊过什么"，记不住"用户是谁"。这一步把记忆拆出第三个层次：**跨会话的长期记忆**——从用户消息里提取稳定事实（姓名、职业、长期目标），将来存下来供后续会话使用。
 
@@ -202,6 +205,47 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 > 关键认知：**长期记忆 = 提取（LLM 决定存什么）+ 存储（数据库负责持久和隔离）**；SQLite 一个文件就是一套方案，够用就不上向量库。
 > 注意：记忆的"召回"（对话开始时把记忆注入 system prompt）是下一步。
 
+### 16. `a15_memory.py` —— 记忆存储升级：完整 CRUD
+
+a14 的存储只有 add/list 两个方法，这一步扩成生产记忆库的样子：
+
+- **五个操作全齐**：`add`（新增，返回自增 id）/ `get`（按 id 查单条）/ `list`（查全部）/ `update`（修改）/ `delete`（删除），update/delete 都返回 `rowcount > 0` 表示是否真的生效
+- **新增分类字段**：`category`（profile / career / interest / preference…）给记忆打标，为将来按类别检索留口子
+- **时间戳**：`created_at` / `updated_at` 由数据库自动维护，`search` 按 `updated_at` 倒序——最近更新过的记忆排前面
+- **索引**：`CREATE INDEX idx_memories_user`，按 `user_id` 查询走索引
+- **`sqlite3.Row`**：行结果可以直接 `dict(row)`，也支持 `row['column']` 按列名取值
+- **测试脚本**：`a15_test_crud.py` 把六个方法各调一遍，每步打印验证
+
+> 关键认知：**所有写操作都带 `WHERE user_id = ?`**——隔离不是"约定不同用户别混"，是每条 SQL 强制保证的。
+
+### 17. `a15_memory_retriever.py` —— 记忆检索：LLM 提关键词
+
+存进去的记忆怎么找回来？直接拿用户原话去 LIKE 匹配命中率很低（"我现在做什么工作？"匹配不到"职业是 Java 工程师"）。解法是让 LLM 先把问题翻译成检索关键词：
+
+```
+用户问题 → DeepSeek 提取关键词（考虑同义词，如"职业"→["职业", "工作", "工程师"]）
+        → 逐个关键词查 SQLite → 按记忆 ID 去重 → 截取 limit 条返回
+```
+
+- **关键词提取是独立的 LLM 调用**：System Prompt 里给示例、提要求（同义词、多个关键词、去掉语气词），`temperature=0` 保证输出稳定
+- **结构化输出兜底**：和 a14 提取器一样的套路——只要 JSON 数组，解析失败或不是数组就降级返回 `[]`
+- **去重**：多个关键词可能命中同一条记忆，用记忆 `id` 做 dict key 去重
+
+> 关键认知：**检索前加一层"LLM 改写"，是 RAG 检索和记忆召回共用的套路**——用户的自然语言和数据库的存储格式之间需要一个翻译步骤。
+> 注意：这里是 LIKE 关键词匹配，比 a03 的向量检索粗糙，但够用且零依赖；记忆量大了再换 Embedding。
+
+### 18. `a15_agent_memory_demo.py` —— 长期记忆 Agent（合体）
+
+把提取（a14）、存储（a15_memory）、检索（a15_memory_retriever）串成能对话的 Agent：
+
+- **Memory Read 流程**：每个用户问题 → `retrieve_memories()` 找相关记忆 → 整理成 `- 记忆内容` 列表 → 作为第二条 system 消息注入 → LLM 按记忆回答
+- **回答规则写进 System Prompt**：可参考记忆、不编造记忆里没有的、没有相关记忆就明说不知道——和 a11 的 RAG 规矩一脉相承
+- **演示数据自举**：库空则先写入 4 条测试记忆（张三 / Java 工程师 / 学 Agent / 先原理后框架），然后交互循环提问，`exit` 退出
+
+至此长期记忆的读路径闭环了：**问"我叫什么"→ 提取关键词"姓名/名字"→ LIKE 搜库 → 记忆注入 prompt → Agent 答出"张三"**。写路径（对话中自动提取入库）是下一步。
+
+> 关键认知：**长期记忆的用法 = 每轮对话前先查库、把查到的塞进 system prompt**——和 RAG 同构，只是查的对象从文档换成了用户自己的事实。
+
 ---
 
 ## 核心概念速查
@@ -220,6 +264,8 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 | 摘要切分边界 | 切分点必须落在 user 消息上，否则拆散 tool_calls/tool 配对，请求报错 |
 | Memory Extractor | 用 Prompt 规则 + JSON 输出，从用户消息里筛出值得跨会话保存的事实 |
 | `MemoryStore` | SQLite 存取长期记忆，`user_id` 隔离不同用户 |
+| LLM 提取检索关键词 | 用户问题 → 同义词关键词 → 查库；自然语言和存储格式之间的翻译层 |
+| Memory Read | 每轮对话前检索长期记忆，注入 system prompt 供 LLM 参考 |
 
 
 ---
