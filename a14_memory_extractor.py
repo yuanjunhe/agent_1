@@ -95,3 +95,24 @@ async def extract_memories(user_message: str) -> list[str]:
 
     except json.JSONDecodeError:
         return []
+
+
+
+from a14_memory import MemoryStore
+
+async def save_user_memory(
+    user_id: str,
+    user_message: str
+):
+
+    memories = await extract_memories(user_message)
+
+    store = MemoryStore()
+
+    for memory in memories:
+        store.add(
+            user_id,
+            memory
+        )
+
+    return memories

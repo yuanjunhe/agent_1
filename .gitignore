@@ -11,3 +11,4 @@ wheels/
 chroma_db
 data
 .DS_Store
+*.db
