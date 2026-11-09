@@ -1,3 +1,13 @@
+# ============================================================
+# 记忆存储：SQLite 持久化提取出的长期记忆
+#
+# MemoryStore 提供按 user_id 隔离的增查接口：add 写入一条
+# 记忆，list 读出一个用户的全部记忆；表结构为
+# user_id + content + 自增 id。
+#
+# 运行：uv run a14_test_long_term_memory.py
+# ============================================================
+
 import sqlite3
 from dataclasses import dataclass
 

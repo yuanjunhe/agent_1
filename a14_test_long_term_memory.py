@@ -1,3 +1,13 @@
+# ============================================================
+# 长期记忆端到端测试：提取 + 存储串成完整链路
+#
+# 5 条用户消息逐条交给 extract_memories() 提取，
+# 提取结果写入 MemoryStore，最后打印该用户的全部记忆；
+# 跑完会在当前目录生成 agent_memory.db。
+#
+# 运行：uv run a14_test_long_term_memory.py
+# ============================================================
+
 import asyncio
 
 from a14_memory import MemoryStore
