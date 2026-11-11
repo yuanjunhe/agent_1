@@ -12,36 +12,36 @@
 
 | # | 文件 | 阶段 | 一句话说明 |
 |---|------|------|-----------|
-| 1 | `a01_ping_api.py` | LLM 入门 | 用 OpenAI SDK 调通 DeepSeek，拿到第一个回答 |
-| 2 | `a02_rag_ingest.py` | RAG 建库 | 文档 → 切分 → Embedding → 存进 ChromaDB |
-| 3 | `a03_rag_query.py` | RAG 问答 | 问题 → 向量检索 → 拼 Prompt → LLM 生成答案 |
-| 4 | `a04_tool_calling_0.py` | Tool Calling 起步 | 最小闭环：一次工具调用 + 一次结果回传 |
-| 5 | `a05_tool_calling.py` | Agent Loop | `while True` 循环：多轮工具调用 + 异常兜底 |
-| 6 | `a06_multi_tool_calling.py` | 多工具调用 | 一次响应返回多个 tool_call，遍历执行 |
-| 7 | `a07_async_tool_calling.py` | 异步并行 | `asyncio.gather` 同时执行多个工具 |
-| 8 | `a08_tool_registry.py` | Agent 架构 | 抽出 Tool Registry + Dispatcher，LLM 只认名字 |
-| 9 | `a09_tool_validation.py` | 参数校验 | 缺参数、类型不对都要在进入业务代码前拦住 |
-| 10 | `a10_tool_runtime.py` | 工具运行时 | 超时 + 重试，工具挂了不拖垮 Agent |
-| 11 | `a11_rag_agent.py` | 合流 | RAG 检索封装成工具，LLM 自己决定何时查库 |
-| 12 | `a12_agent.py` | 有状态的 Agent | `AgentState` 外置 + 多轮对话 + `MAX_STEPS` |
-| 13 | `a13_summary_memory.py` | 摘要记忆 | 消息超阈值就滚动摘要压缩历史 |
-| 14 | `a14_memory_extractor.py` | 长期记忆提取 | LLM 从用户消息里提取值得长期保存的信息 |
-| 15 | `a14_memory.py` | 记忆存储 | SQLite 存取提取出的记忆，按 `user_id` 隔离 |
-| 16 | `a15_memory.py` | 记忆存储升级 | 完整 CRUD：分类字段 + 时间戳 + 索引 + 关键词搜索 |
-| 17 | `a15_memory_retriever.py` | 记忆检索 | LLM 从问题提取关键词，多关键词查库去重（当前进度） |
-| 18 | `a15_agent_memory_demo.py` | 记忆注入 Agent | 检索到的长期记忆注入 system prompt，按记忆回答 |
+| 1 | `src/a01_rag/t01_ping_api.py` | LLM 入门 | 用 OpenAI SDK 调通 DeepSeek，拿到第一个回答 |
+| 2 | `src/a01_rag/t02_rag_ingest.py` | RAG 建库 | 文档 → 切分 → Embedding → 存进 ChromaDB |
+| 3 | `src/a01_rag/t03_rag_query.py` | RAG 问答 | 问题 → 向量检索 → 拼 Prompt → LLM 生成答案 |
+| 4 | `src/a02_tool_calling/t01_tool_calling_0.py` | Tool Calling 起步 | 最小闭环：一次工具调用 + 一次结果回传 |
+| 5 | `src/a02_tool_calling/t02_tool_calling.py` | Agent Loop | `while True` 循环：多轮工具调用 + 异常兜底 |
+| 6 | `src/a02_tool_calling/t03_multi_tool_calling.py` | 多工具调用 | 一次响应返回多个 tool_call，遍历执行 |
+| 7 | `src/a02_tool_calling/t04_async_tool_calling.py` | 异步并行 | `asyncio.gather` 同时执行多个工具 |
+| 8 | `src/a02_tool_calling/t05_tool_registry.py` | Agent 架构 | 抽出 Tool Registry + Dispatcher，LLM 只认名字 |
+| 9 | `src/a02_tool_calling/t06_tool_validation.py` | 参数校验 | 缺参数、类型不对都要在进入业务代码前拦住 |
+| 10 | `src/a02_tool_calling/t07_tool_runtime.py` | 工具运行时 | 超时 + 重试，工具挂了不拖垮 Agent |
+| 11 | `src/a03_agent/t01_rag_agent.py` | 合流 | RAG 检索封装成工具，LLM 自己决定何时查库 |
+| 12 | `src/a03_agent/t02_agent.py` | 有状态的 Agent | `AgentState` 外置 + 多轮对话 + `MAX_STEPS` |
+| 13 | `src/a03_agent/t03_summary_memory.py` | 摘要记忆 | 消息超阈值就滚动摘要压缩历史 |
+| 14 | `src/a04_memory/t01_memory_extractor.py` | 长期记忆提取 | LLM 从用户消息里提取值得长期保存的信息 |
+| 15 | `src/a04_memory/t02_memory_store.py` | 记忆存储 | SQLite 存取提取出的记忆，按 `user_id` 隔离 |
+| 16 | `src/a04_memory/t05_memory_crud.py` | 记忆存储升级 | 完整 CRUD：分类字段 + 时间戳 + 索引 + 关键词搜索 |
+| 17 | `src/a04_memory/t07_memory_retriever.py` | 记忆检索 | LLM 从问题提取关键词，多关键词查库去重（当前进度） |
+| 18 | `src/a04_memory/t08_agent_memory_demo.py` | 记忆注入 Agent | 检索到的长期记忆注入 system prompt，按记忆回答 |
 
 ---
 
 ## 每一步做了什么
 
-### 1. `a01_ping_api.py` —— 调通大模型
+### 1. `src/a01_rag/t01_ping_api.py` —— 调通大模型
 
 四步：读 API Key → 建 OpenAI 客户端（`base_url` 指向 DeepSeek 兼容接口）→ 发一条对话（`extra_body` 关掉思考模式，让链路最简单）→ 打印回答和 token 用量。
 
 > 关键认知：**LLM 调用 = 一个 HTTP 请求 + 一个 JSON 响应**，token 是要花钱的。
 
-### 2. `a02_rag_ingest.py` —— RAG 建库（入库半边）
+### 2. `src/a01_rag/t02_rag_ingest.py` —— RAG 建库（入库半边）
 
 `main()` 串起整条流水线：
 
@@ -58,7 +58,7 @@ data/ 下的 txt/md
 > 关键认知：**RAG 检索靠向量距离，不是关键词匹配**；Chunk 大小和重叠策略直接决定检索质量。
 > `data/` 和 `chroma_db/` 都已 gitignore，换机器要重新跑一次建库。
 
-### 3. `a03_rag_query.py` —— RAG 问答（检索半边）
+### 3. `src/a01_rag/t03_rag_query.py` —— RAG 问答（检索半边）
 
 ```
 用户问题 → 向量化（必须和入库用同一个模型！）→ ChromaDB 检索 Top-3
@@ -68,7 +68,7 @@ data/ 下的 txt/md
 
 > 关键认知：**入库和查询必须用同一个 Embedding 模型**，否则向量空间对不上，检索全是噪声。
 
-### 4. `a04_tool_calling_0.py` —— 最小工具调用闭环
+### 4. `src/a02_tool_calling/t01_tool_calling_0.py` —— 最小工具调用闭环
 
 一次调用、一个工具、没有循环。看清三件事：
 
@@ -78,7 +78,7 @@ data/ 下的 txt/md
 
 > 关键认知：`tool_call_id` 是"这条结果对应哪次调用"的凭证。这里用了 `tool_calls[0]`，这个假设在下一步被打破。
 
-### 5. `a05_tool_calling.py` —— Agent Loop（核心文件）
+### 5. `src/a02_tool_calling/t02_tool_calling.py` —— Agent Loop（核心文件）
 
 在最小闭环上加 `while True`：`LLM → Tool → LLM → Tool → …`，直到 LLM 不再要求调用工具才结束。三个升级：
 
@@ -88,14 +88,14 @@ data/ 下的 txt/md
 
 > 关键认知：**把错误当成工具结果返回给 LLM，LLM 就能自己纠错**——这是 Agent 比一次性脚本抗造的原因。
 
-### 6. `a06_multi_tool_calling.py` —— 一次响应，多个工具
+### 6. `src/a02_tool_calling/t03_multi_tool_calling.py` —— 一次响应，多个工具
 
 用户问"同时计算 10+20 和 8×9"，LLM 一次返回**两个** tool_call，`for` 循环逐个执行、逐个回传（各自带 `tool_call_id`）。
 故意写两个独立计算来诱导这种一次多调的响应。
 
 留了个明显问题：**串行执行**——两个各 2 秒的工具要等 4 秒。于是有了下一步。
 
-### 7. `a07_async_tool_calling.py` —— 并行执行工具
+### 7. `src/a02_tool_calling/t04_async_tool_calling.py` —— 并行执行工具
 
 工具改成 `async def`（内部 `asyncio.sleep(2)` 模拟网络/数据库耗时），执行抽成 `execute_tool()`，关键三行：
 
@@ -107,7 +107,7 @@ messages.extend(results)
 
 > 关键认知：工具是 IO 密集型时并行收益巨大；纯 CPU 计算不受益（那要用多进程）。
 
-### 8. `a08_tool_registry.py` —— Registry + Dispatcher（架构化）
+### 8. `src/a02_tool_calling/t05_tool_registry.py` —— Registry + Dispatcher（架构化）
 
 把散在主循环里的工具处理收拢成两个概念：
 
@@ -120,7 +120,7 @@ messages.extend(results)
 
 > 关键认知：**Tool Schema ≠ Python 函数**，两者靠工具名这份"契约"连接。
 
-### 9. `a09_tool_validation.py` —— 参数校验
+### 9. `src/a02_tool_calling/t06_tool_validation.py` —— 参数校验
 
 新增 `validate_arguments()`：检查参数**存在**（缺了抛 `ValueError`）、**类型对**（不对抛 `TypeError`）。Dispatcher 变成流水线：
 
@@ -131,7 +131,7 @@ messages.extend(results)
 
 > 关键认知：LLM 生成的参数**经常会错**。校验不是防坏人，是在错误进业务代码前拦住、并把原因告诉 LLM 让它重试。（手工 if/elif 是最简实现，生产上一般用 Pydantic 按 Schema 自动校验。）
 
-### 10. `a10_tool_runtime.py` —— 超时 + 重试
+### 10. `src/a02_tool_calling/t07_tool_runtime.py` —— 超时 + 重试
 
 校验拦得住坏参数，拦不住"工具本身挂了"。新增 `execute_tool()` 运行时：
 
@@ -143,11 +143,11 @@ messages.extend(results)
 
 > 关键认知：**重试要有边界**——超时预算要和整体响应时间一起设计。
 
-### 11. `a11_rag_agent.py` —— 两条线合流
+### 11. `src/a03_agent/t01_rag_agent.py` —— 两条线合流
 
-把 a03 的检索逻辑原样封装成 `search_knowledge(query)` 工具，注册进 Registry，套上 Agent Loop。关键转变是**谁来决定检索**：
+把 a01_rag/t03_rag_query 的检索逻辑原样封装成 `search_knowledge(query)` 工具，注册进 Registry，套上 Agent Loop。关键转变是**谁来决定检索**：
 
-| | 写死的 RAG（a03） | RAG as a Tool（a11） |
+| | 写死的 RAG（a01_rag） | RAG as a Tool（t01_rag_agent） |
 |---|---|---|
 | 检索时机 | 每个问题都查 | LLM 判断需要时才调 |
 | 检索次数 | 固定 1 次 | 可多次，可换问法再查 |
@@ -157,7 +157,7 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 
 > 关键认知：**Tool 的返回值就是 Prompt**——`search_knowledge` 返回的 `[知识片段 1]…` 文本会直接喂给 LLM，怎么组织它和写 Prompt 是一回事。
 
-### 12. `a12_agent.py` —— 有状态的多轮 Agent
+### 12. `src/a03_agent/t02_agent.py` —— 有状态的多轮 Agent
 
 三个增量：
 
@@ -168,9 +168,9 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 工具集扩到 4 个：`add` / `multiply` / `subtract` + 从 RAG 线合流来的 `search_knowledge`。可以试 *"JVM 有几个运行时数据区，再乘以 3 等于多少"* 这种既查库又计算的复合问题。
 
 > 关键认知：**Agent Loop 必须能停下来**——正常完成、步数上限、用户退出，三个退出条件各管一层。
-> 注意：a12 是"框架骨架"，刻意回退了校验/超时/并行，每个文件只聚焦一个新概念。
+> 注意：t02_agent 是"框架骨架"，刻意回退了校验/超时/并行，每个文件只聚焦一个新概念。
 
-### 13. `a13_summary_memory.py` —— 摘要记忆
+### 13. `src/a03_agent/t03_summary_memory.py` —— 摘要记忆
 
 多轮对话下 `state.messages` 只增不减，聊久了必然顶到上下文上限。解法：把旧历史滚动摘要成一段文本。
 
@@ -181,44 +181,44 @@ System Prompt 写明三条规矩：需要就调 `search_knowledge`、拿到结�
 
 > 关键认知：**摘要本身也是一次 LLM 调用，压缩记忆有成本**；生产上按 token 数而非消息条数触发。
 
-### 14. `a14_memory_extractor.py` —— 长期记忆提取
+### 14. `src/a04_memory/t01_memory_extractor.py` —— 长期记忆提取
 
 摘要记忆只记住"聊过什么"，记不住"用户是谁"。这一步把记忆拆出第三个层次：**跨会话的长期记忆**——从用户消息里提取稳定事实（姓名、职业、长期目标），将来存下来供后续会话使用。
 
 - **记忆提取器**：`extract_memories()` 把一条用户消息连同提取规则发给 LLM，返回一个字符串数组，每个元素是一条独立记忆
 - **提取规则写进 Prompt**：正例（姓名/职业/长期兴趣/偏好/目标/进行中的重要项目）和反例（一次性计算、闲聊、临时问题）都明确列出，边界靠规则约束
 - **结构化输出**：要求 LLM 只输出 JSON 数组；`json.loads` 解析失败或结果不是数组时降级返回 `[]`，不让坏输出崩掉调用方
-- **测试脚本**：`a14_test_memory_extractor.py` 用 6 条消息验证——4 条个人信息应提取，计算和闲聊应返回 `[]`
+- **测试脚本**：`src/a04_memory/t03_test_memory_extractor.py` 用 6 条消息验证——4 条个人信息应提取，计算和闲聊应返回 `[]`
 - **入库函数**：`save_user_memory()` 把提取和存储串起来——先调 `extract_memories()`，再逐条 `store.add()` 写库
 
-> 关键认知：**提取 = 让 LLM 做分类 + 结构化输出**；和 a13 的摘要对比——摘要是"有损压缩自己的历史"，提取是"从消息里筛出要永久保存的事实"。
+> 关键认知：**提取 = 让 LLM 做分类 + 结构化输出**；和 a03_agent 的摘要对比——摘要是"有损压缩自己的历史"，提取是"从消息里筛出要永久保存的事实"。
 > 注意：本文件只做"提取"这一步，记忆的存储和召回（写入向量库 / 注入 system prompt）是后续步骤。
 
-### 15. `a14_memory.py` —— 记忆存储
+### 15. `src/a04_memory/t02_memory_store.py` —— 记忆存储
 
 提取出的记忆要落到磁盘才能跨会话使用。`MemoryStore` 用 SQLite 做最简单的持久层：
 
 - **表结构只有三列**：`id`（自增主键）、`user_id`（谁的记忆）、`content`（记忆内容），建表语句 `CREATE TABLE IF NOT EXISTS` 保证重复初始化不报错
 - **按用户隔离**：`add(user_id, content)` 写入、`list(user_id)` 按 `user_id` 过滤按序读出，不同用户的记忆互不可见
-- **测试脚本**：`a14_test_long_term_memory.py` 串起完整链路：5 条用户消息 → 逐条提取 → 写库 → 打印该用户的全部记忆，跑完会在当前目录生成 `agent_memory.db`（已 gitignore）
+- **测试脚本**：`src/a04_memory/t04_test_long_term_memory.py` 串起完整链路：5 条用户消息 → 逐条提取 → 写库 → 打印该用户的全部记忆，跑完会在项目根 `temp/` 下生成 `agent_memory.db`（已 gitignore）
 
 > 关键认知：**长期记忆 = 提取（LLM 决定存什么）+ 存储（数据库负责持久和隔离）**；SQLite 一个文件就是一套方案，够用就不上向量库。
 > 注意：记忆的"召回"（对话开始时把记忆注入 system prompt）是下一步。
 
-### 16. `a15_memory.py` —— 记忆存储升级：完整 CRUD
+### 16. `src/a04_memory/t05_memory_crud.py` —— 记忆存储升级：完整 CRUD
 
-a14 的存储只有 add/list 两个方法，这一步扩成生产记忆库的样子：
+t02_memory_store 的最简版只有 add/list 两个方法，这一步扩成生产记忆库的样子：
 
 - **五个操作全齐**：`add`（新增，返回自增 id）/ `get`（按 id 查单条）/ `list`（查全部）/ `update`（修改）/ `delete`（删除），update/delete 都返回 `rowcount > 0` 表示是否真的生效
 - **新增分类字段**：`category`（profile / career / interest / preference…）给记忆打标，为将来按类别检索留口子
 - **时间戳**：`created_at` / `updated_at` 由数据库自动维护，`search` 按 `updated_at` 倒序——最近更新过的记忆排前面
 - **索引**：`CREATE INDEX idx_memories_user`，按 `user_id` 查询走索引
 - **`sqlite3.Row`**：行结果可以直接 `dict(row)`，也支持 `row['column']` 按列名取值
-- **测试脚本**：`a15_test_crud.py` 把六个方法各调一遍，每步打印验证
+- **测试脚本**：`src/a04_memory/t06_test_crud.py` 把六个方法各调一遍，每步打印验证
 
 > 关键认知：**所有写操作都带 `WHERE user_id = ?`**——隔离不是"约定不同用户别混"，是每条 SQL 强制保证的。
 
-### 17. `a15_memory_retriever.py` —— 记忆检索：LLM 提关键词
+### 17. `src/a04_memory/t07_memory_retriever.py` —— 记忆检索：LLM 提关键词
 
 存进去的记忆怎么找回来？直接拿用户原话去 LIKE 匹配命中率很低（"我现在做什么工作？"匹配不到"职业是 Java 工程师"）。解法是让 LLM 先把问题翻译成检索关键词：
 
@@ -228,18 +228,18 @@ a14 的存储只有 add/list 两个方法，这一步扩成生产记忆库的样
 ```
 
 - **关键词提取是独立的 LLM 调用**：System Prompt 里给示例、提要求（同义词、多个关键词、去掉语气词），`temperature=0` 保证输出稳定
-- **结构化输出兜底**：和 a14 提取器一样的套路——只要 JSON 数组，解析失败或不是数组就降级返回 `[]`
+- **结构化输出兜底**：和 t01 提取器一样的套路——只要 JSON 数组，解析失败或不是数组就降级返回 `[]`
 - **去重**：多个关键词可能命中同一条记忆，用记忆 `id` 做 dict key 去重
 
 > 关键认知：**检索前加一层"LLM 改写"，是 RAG 检索和记忆召回共用的套路**——用户的自然语言和数据库的存储格式之间需要一个翻译步骤。
-> 注意：这里是 LIKE 关键词匹配，比 a03 的向量检索粗糙，但够用且零依赖；记忆量大了再换 Embedding。
+> 注意：这里是 LIKE 关键词匹配，比 a01_rag 的向量检索粗糙，但够用且零依赖；记忆量大了再换 Embedding。
 
-### 18. `a15_agent_memory_demo.py` —— 长期记忆 Agent（合体）
+### 18. `src/a04_memory/t08_agent_memory_demo.py` —— 长期记忆 Agent（合体）
 
-把提取（a14）、存储（a15_memory）、检索（a15_memory_retriever）串成能对话的 Agent：
+把提取（t01）、存储（t05_memory_crud）、检索（t07_memory_retriever）串成能对话的 Agent：
 
 - **Memory Read 流程**：每个用户问题 → `retrieve_memories()` 找相关记忆 → 整理成 `- 记忆内容` 列表 → 作为第二条 system 消息注入 → LLM 按记忆回答
-- **回答规则写进 System Prompt**：可参考记忆、不编造记忆里没有的、没有相关记忆就明说不知道——和 a11 的 RAG 规矩一脉相承
+- **回答规则写进 System Prompt**：可参考记忆、不编造记忆里没有的、没有相关记忆就明说不知道——和 t01_rag_agent 的 RAG 规矩一脉相承
 - **演示数据自举**：库空则先写入 4 条测试记忆（张三 / Java 工程师 / 学 Agent / 先原理后框架），然后交互循环提问，`exit` 退出
 
 至此长期记忆的读路径闭环了：**问"我叫什么"→ 提取关键词"姓名/名字"→ LIKE 搜库 → 记忆注入 prompt → Agent 答出"张三"**。写路径（对话中自动提取入库）是下一步。

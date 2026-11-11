@@ -5,7 +5,7 @@
 # 按 prompt 里的规则判断哪些信息值得长期保存（姓名、职业、
 # 长期目标等），以 JSON 数组形式返回；解析失败时降级为空列表。
 #
-# 运行：uv run a14_test_memory_extractor.py
+# 运行：uv run python src/a04_memory/t03_test_memory_extractor.py
 # ============================================================
 
 import os
@@ -98,7 +98,7 @@ async def extract_memories(user_message: str) -> list[str]:
 
 
 
-from a14_memory import MemoryStore
+from t02_memory_store import MemoryStore
 
 async def save_user_memory(
     user_id: str,

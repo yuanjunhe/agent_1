@@ -7,7 +7,7 @@
 #
 #     LLM → Tool → LLM → Tool → LLM → ... → 最终回答
 #
-# 运行：uv run a05_tool_calling.py
+# 运行：uv run python src/a02_tool_calling/t02_tool_calling.py
 # ============================================================
 
 import os

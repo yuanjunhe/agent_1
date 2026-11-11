@@ -9,8 +9,8 @@
 # 3. for 循环 + MAX_STEPS 限制单次任务的步数，防止 LLM
 #    无限循环调工具
 #
-# 运行前必须先跑过入库脚本 a02_rag_ingest.py（否则 collection 不存在）。
-# 运行：uv run a12_agent.py
+# 运行前必须先跑过入库脚本 t02_rag_ingest.py（否则 collection 不存在）。
+# 运行：uv run python src/a03_agent/t02_agent.py
 # ============================================================
 
 import os
@@ -19,7 +19,7 @@ import asyncio
 from dataclasses import dataclass, field
 from openai import AsyncOpenAI
 
-from a11_rag_agent import search_knowledge
+from t01_rag_agent import search_knowledge
 
 
 # 1. Agent State

@@ -5,11 +5,16 @@
 # 记忆，list 读出一个用户的全部记忆；表结构为
 # user_id + content + 自增 id。
 #
-# 运行：uv run a14_test_long_term_memory.py
+# 运行：uv run python src/a04_memory/t04_test_long_term_memory.py
 # ============================================================
 
 import sqlite3
 from dataclasses import dataclass
+from pathlib import Path
+
+
+# 数据库文件统一放项目根的 temp/ 下，避免散落在根目录
+DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "temp" / "agent_memory.db"
 
 
 @dataclass
@@ -21,7 +26,7 @@ class Memory:
 
 class MemoryStore:
 
-    def __init__(self, db_path="agent_memory.db"):
+    def __init__(self, db_path=DEFAULT_DB_PATH):
         self.conn = sqlite3.connect(db_path)
 
         self.conn.execute("""

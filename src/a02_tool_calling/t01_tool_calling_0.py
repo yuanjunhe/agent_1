@@ -5,7 +5,7 @@
 # 把结果回传，再拿到最终回答。
 # 理解 tool_calls、tool_call_id、role="tool" 三个关键概念，是后续 Agent Loop 的基础。
 # 
-# 运行：uv run a04_tool_calling_0.py
+# 运行：uv run python src/a02_tool_calling/t01_tool_calling_0.py
 # ============================================================
 
 import os

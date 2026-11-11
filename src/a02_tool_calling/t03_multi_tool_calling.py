@@ -5,7 +5,7 @@
 # 这个版本讲"一次多个"——LLM 一次响应可以返回多个 tool_call
 # （如 add(10,20) 和 multiply(8,9)），遍历全部执行后再回传。
 #
-# 运行：uv run a06_multi_tool_calling.py
+# 运行：uv run python src/a02_tool_calling/t03_multi_tool_calling.py
 # ============================================================
 
 import os

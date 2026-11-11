@@ -1,15 +1,15 @@
 # ============================================================
-# 记忆提取器测试：用一组典型消息验证 a14_memory_extractor
+# 记忆提取器测试：用一组典型消息验证 t01_memory_extractor
 #
 # 覆盖两类输入：值得记忆的（姓名、职业、兴趣、偏好）
 # 和不值得记忆的（计算任务、闲聊），检查提取结果是否符合预期。
 #
-# 运行：uv run a14_test_memory_extractor.py
+# 运行：uv run python src/a04_memory/t03_test_memory_extractor.py
 # ============================================================
 
 import asyncio
 
-from a14_memory_extractor import extract_memories
+from t01_memory_extractor import extract_memories
 
 
 async def main():

@@ -5,15 +5,20 @@
 # delete / search 六个方法，表结构为 user_id + category +
 # content + 时间戳，user_id 建有索引。
 #
-# 运行：uv run a15_test_crud.py
+# 运行：uv run python src/a04_memory/t06_test_crud.py
 # ============================================================
 
 import sqlite3
+from pathlib import Path
+
+
+# 数据库文件统一放项目根的 temp/ 下，避免散落在根目录
+DEFAULT_DB_PATH = Path(__file__).resolve().parent.parent.parent / "temp" / "agent_memory.db"
 
 
 class MemoryStore:
 
-    def __init__(self, db_path="agent_memory.db"):
+    def __init__(self, db_path=DEFAULT_DB_PATH):
         self.conn = sqlite3.connect(db_path)
         self.conn.row_factory = sqlite3.Row
 

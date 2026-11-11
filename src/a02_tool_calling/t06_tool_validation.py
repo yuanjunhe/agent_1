@@ -1,12 +1,12 @@
 # ============================================================
-# 工具运行时：超时 + 重试 + 异常处理
+# 参数校验：缺参数、类型不对都要拦住
 #
-# 对比上一版：参数校验能拦住坏参数，但工具本身挂了（比如慢接口卡死）
-# 还是会拖垮 Agent。这个版本给执行环节加运行时保护：
-# execute_tool 用 asyncio.wait_for 限时、失败自动重试，
-# slow_tool（睡 10 秒，超时 3 秒）专门演示超时重试路径。
+# 对比上一版：Dispatcher 直接信任 LLM 给的参数；这个版本在查表
+# 和执行之间加一道 validate_arguments——参数缺失抛 ValueError、
+# 类型不对抛 TypeError，校验失败时把错误作为 tool 结果回传，
+# LLM 有机会修正后重试。
 #
-# 运行：uv run a10_tool_runtime.py
+# 运行：uv run python src/a02_tool_calling/t06_tool_validation.py
 # ============================================================
 
 import os
@@ -44,30 +44,21 @@ async def multiply(a, b):
     return a * b
 
 
-# 慢工具：实际项目中对应 HTTP 请求 / 数据库查询 / 第三方 API
-# 故意睡 10 秒，用来触发下面的超时重试逻辑
-
-async def slow_tool():
-    print("slow_tool 开始执行")
-    await asyncio.sleep(10)
-    return "slow tool success"
-
-
 # 3. Tool Registry
 
 TOOL_REGISTRY = {
     "add": add,
-    "multiply": multiply,
-    "slow_tool": slow_tool
+    "multiply": multiply
 }
 
 
-# 4. 参数校验（和上一版相同）
+# 4. 参数校验器（本文件的新东西）
+# 检查参数是否存在（ValueError）、类型是否正确（TypeError），
+# 最简实现：每个工具一组手写检查
 
 def validate_arguments(tool_name, arguments):
 
-    if tool_name in ["add", "multiply"]:
-
+    if tool_name == "add":
         if "a" not in arguments:
             raise ValueError("缺少参数：a")
         if "b" not in arguments:
@@ -77,56 +68,22 @@ def validate_arguments(tool_name, arguments):
         if not isinstance(arguments["b"], (int, float)):
             raise TypeError("参数 b 必须是数字")
 
+    elif tool_name == "multiply":
+        if "a" not in arguments:
+            raise ValueError("缺少参数：a")
+        if "b" not in arguments:
+            raise ValueError("缺少参数：b")
+        if not isinstance(arguments["a"], (int, float)):
+            raise TypeError("参数 a 必须是数字")
+        if not isinstance(arguments["b"], (int, float)):
+            raise TypeError("参数 b 必须是数字")
 
-# 5. 执行 Tool：超时 + 重试（本文件的新东西）
-# wait_for 限时 timeout 秒，超时或异常都重试，最多 max_retries 次，
-# 每次重试前歇 1 秒；重试耗尽抛 RuntimeError 交给 Dispatcher 兜底
-
-async def execute_tool(
-    tool_function,
-    arguments,
-    timeout=3,
-    max_retries=3
-):
-
-    for attempt in range(1, max_retries + 1):
-
-        try:
-            print(f"Tool 第 {attempt} 次执行")
-
-            # wait_for：最多等 timeout 秒，超时抛 TimeoutError
-            result = await asyncio.wait_for(
-                tool_function(**arguments),
-                timeout=timeout
-            )
-
-            # 执行成功，直接返回
-            return result
-
-        except asyncio.TimeoutError:
-            print(f"Tool 执行超时：{timeout} 秒")
-
-            # 没到重试上限就歇 1 秒再试，否则抛错
-            if attempt < max_retries:
-                print("准备重试...")
-                await asyncio.sleep(1)
-            else:
-                raise RuntimeError(
-                    f"Tool 执行超时，已经重试 {max_retries} 次"
-                )
-
-        except Exception as e:
-            print(f"Tool 执行异常：{e}")
-
-            if attempt < max_retries:
-                print("准备重试...")
-                await asyncio.sleep(1)
-            else:
-                raise RuntimeError(f"Tool 执行失败：{e}")
+    else:
+        raise ValueError(f"未知 Tool：{tool_name}")
 
 
-# 6. Dispatcher
-# 流水线：解析 JSON → 查表 → 校验 → 带运行时保护的执行，每步失败都回传
+# 5. Dispatcher：在上一版基础上多了一道校验
+# 完整流水线：解析 JSON → 查表 → 校验参数 → 执行，每步失败都回传错误
 
 async def dispatch_tool(tool_call):
 
@@ -142,10 +99,10 @@ async def dispatch_tool(tool_call):
             "content": "Tool 参数不是合法 JSON"
         }
 
-    print(f"\nDispatcher 收到：{tool_name}")
-    print(f"参数：{arguments}")
+    print(f"\nDispatcher 收到请求：{tool_name}")
+    print(f"Tool 参数：{arguments}")
 
-    # 查找 Tool
+    # 检查 Tool 是否存在
     tool_function = TOOL_REGISTRY.get(tool_name)
     if tool_function is None:
         return {
@@ -154,24 +111,20 @@ async def dispatch_tool(tool_call):
             "content": f"Tool 不存在：{tool_name}"
         }
 
-    # 参数校验
+    # 参数校验：缺参数 / 类型不对都会被拦在这里
     try:
         validate_arguments(tool_name, arguments)
     except (ValueError, TypeError) as e:
+        print(f"参数校验失败：{e}")
         return {
             "role": "tool",
             "tool_call_id": tool_call.id,
             "content": f"参数错误：{e}"
         }
 
-    # 执行 Tool：超时 3 秒、最多重试 3 次
+    # 执行 Tool；执行期异常同样兜底
     try:
-        result = await execute_tool(
-            tool_function,
-            arguments,
-            timeout=3,
-            max_retries=3
-        )
+        result = await tool_function(**arguments)
         print(f"Tool 执行成功：{tool_name} → {result}")
 
         return {
@@ -180,9 +133,8 @@ async def dispatch_tool(tool_call):
             "content": str(result)
         }
 
-    # 最终失败（重试耗尽）：错误作为 tool 结果回传，不拖垮 Agent
     except Exception as e:
-        print(f"Tool 最终执行失败：{e}")
+        print(f"Tool 执行异常：{e}")
         return {
             "role": "tool",
             "tool_call_id": tool_call.id,
@@ -190,7 +142,8 @@ async def dispatch_tool(tool_call):
         }
 
 
-# 7. Tool Schema
+# 6. Tool Schema
+# 注意 multiply 的参数故意没写 description——模拟描述不全的真实场景
 
 tools = [
     {
@@ -201,8 +154,14 @@ tools = [
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "a": {"type": "number"},
-                    "b": {"type": "number"}
+                    "a": {
+                        "type": "number",
+                        "description": "第一个数字"
+                    },
+                    "b": {
+                        "type": "number",
+                        "description": "第二个数字"
+                    }
                 },
                 "required": ["a", "b"]
             }
@@ -222,23 +181,12 @@ tools = [
                 "required": ["a", "b"]
             }
         }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "slow_tool",
-            "description": "一个执行时间很长的测试工具",
-            "parameters": {
-                "type": "object",
-                "properties": {}
-            }
-        }
     }
 ]
 
 
-# 8. Agent Loop
-# 骨架和上一版相同，用户消息里故意要求调用 slow_tool 触发超时重试
+# 7. Agent Loop
+# 骨架和上一版相同，健壮性全部在 Dispatcher 里
 
 async def main():
 
@@ -246,9 +194,9 @@ async def main():
         {
             "role": "user",
             "content": (
-                "同时计算 10 + 20，"
-                "8 × 9，"
-                "并测试一下 slow_tool。"
+                "同时计算 "
+                "10 + 20，"
+                "以及 8 × 9。"
             )
         }
     ]
@@ -286,6 +234,6 @@ async def main():
         messages.extend(results)
 
 
-# 9. 启动
+# 8. 启动
 if __name__ == "__main__":
     asyncio.run(main())

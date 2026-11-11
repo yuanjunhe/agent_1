@@ -13,4 +13,4 @@ dependencies = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/rag_1"]
+packages = ["src/a01_rag"]

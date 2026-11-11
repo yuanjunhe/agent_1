@@ -6,7 +6,7 @@
 # 检索结果注入 system prompt，再让 LLM 按记忆回答。
 # 输入 exit / quit 退出。
 #
-# 运行：uv run a15_agent_memory_demo.py
+# 运行：uv run python src/a04_memory/t08_agent_memory_demo.py
 # ============================================================
 
 import os
@@ -14,8 +14,8 @@ import asyncio
 
 from openai import AsyncOpenAI
 
-from a15_memory import MemoryStore
-from a15_memory_retriever import retrieve_memories
+from t05_memory_crud import MemoryStore
+from t07_memory_retriever import retrieve_memories
 
 
 client = AsyncOpenAI(

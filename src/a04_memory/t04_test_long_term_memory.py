@@ -3,15 +3,15 @@
 #
 # 5 条用户消息逐条交给 extract_memories() 提取，
 # 提取结果写入 MemoryStore，最后打印该用户的全部记忆；
-# 跑完会在当前目录生成 agent_memory.db。
+# 跑完会在项目根的 temp/ 下生成 agent_memory.db。
 #
-# 运行：uv run a14_test_long_term_memory.py
+# 运行：uv run python src/a04_memory/t04_test_long_term_memory.py
 # ============================================================
 
 import asyncio
 
-from a14_memory import MemoryStore
-from a14_memory_extractor import extract_memories
+from t02_memory_store import MemoryStore
+from t01_memory_extractor import extract_memories
 
 
 async def main():

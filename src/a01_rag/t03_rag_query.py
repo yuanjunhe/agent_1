@@ -4,7 +4,7 @@
 # 连接前面建好的 ChromaDB，把用户问题转成向量
 # 检索 Top-K 相关 Chunk，拼进 Prompt 交给 DeepSeek 生成回答。
 #
-# 运行：uv run a03_rag_query.py
+# 运行：uv run python src/a01_rag/t03_rag_query.py
 # ============================================================
 
 from pathlib import Path
@@ -18,11 +18,12 @@ import os
 
 # 1. 基础配置
 
-# 项目目录 / ChromaDB 数据目录
-BASE_DIR = Path(__file__).parent
+# 项目根 / ChromaDB 数据目录
+# chroma_db/ 在项目根目录，不在本文件所在目录
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 CHROMA_DIR = BASE_DIR / "chroma_db"
 
-# 必须和 a02_rag_ingest.py 使用相同的 Collection
+# 必须和 t02_rag_ingest.py（RAG 建库脚本，在 src/a01_rag/ 下）使用相同的 Collection
 COLLECTION_NAME = "java_knowledge"
 
 # 必须使用和入库时相同的 Embedding 模型

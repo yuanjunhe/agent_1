@@ -5,8 +5,8 @@
 # 工具（RAG 线提供"知识"），套上 Tool Calling 线的 Agent Loop
 # （提供"手脚"）。LLM 自己判断要不要查库、查什么。
 #
-# 运行前必须先跑过入库脚本 a02_rag_ingest.py（否则 collection 不存在）。
-# 运行：uv run a11_rag_agent.py
+# 运行前必须先跑过入库脚本 t02_rag_ingest.py（否则 collection 不存在）。
+# 运行：uv run python src/a03_agent/t01_rag_agent.py
 # ============================================================
 
 import os
@@ -27,13 +27,13 @@ client = AsyncOpenAI(
 
 
 # 2. 加载 Embedding 模型
-# 必须和 a02_rag_ingest.py 入库时用的是同一个模型
+# 必须和 t02_rag_ingest.py 入库时用的是同一个模型
 
 embedding_model = SentenceTransformer("BAAI/bge-small-zh-v1.5")
 
 
 # 3. 连接 ChromaDB 并获取知识库
-# 路径和 Collection 名都要与 a02_rag_ingest.py 一致
+# 路径和 Collection 名都要与 t02_rag_ingest.py 一致
 
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 

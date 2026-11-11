@@ -2,12 +2,12 @@
 # MemoryStore CRUD 测试：逐个验证记忆存储的增删改查
 #
 # 依次执行新增 → 查询 → 更新 → 关键词搜索 → 删除，
-# 每步打印结果，验证 a15_memory 各方法的返回值。
+# 每步打印结果，验证 t05_memory_crud 各方法的返回值。
 #
-# 运行：uv run a15_test_crud.py
+# 运行：uv run python src/a04_memory/t06_test_crud.py
 # ============================================================
 
-from a15_memory import MemoryStore
+from t05_memory_crud import MemoryStore
 
 
 def main():

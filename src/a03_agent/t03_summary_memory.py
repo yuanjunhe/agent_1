@@ -6,8 +6,8 @@
 # 最近几条消息。发给 LLM 的上下文由 build_context 现场组装
 # （system prompt + 摘要注入 + 最近消息）。
 #
-# 运行前必须先跑过入库脚本 a02_rag_ingest.py（否则 collection 不存在）。
-# 运行：uv run a13_summary_memory.py
+# 运行前必须先跑过入库脚本 t02_rag_ingest.py（否则 collection 不存在）。
+# 运行：uv run python src/a03_agent/t03_summary_memory.py
 # ============================================================
 
 import os
@@ -16,7 +16,7 @@ import asyncio
 from dataclasses import dataclass, field
 from openai import AsyncOpenAI
 
-from a11_rag_agent import search_knowledge
+from t01_rag_agent import search_knowledge
 
 
 # 1. Agent State

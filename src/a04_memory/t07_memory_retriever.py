@@ -5,7 +5,7 @@
 # JSON 数组输出）→ 逐个关键词查 SQLite → 按 ID 去重
 # → 限制条数返回。关键词提取失败时降级为空列表。
 #
-# 运行：uv run a15_agent_memory_demo.py
+# 运行：uv run python src/a04_memory/t08_agent_memory_demo.py
 # ============================================================
 
 import os
@@ -13,7 +13,7 @@ import json
 
 from openai import AsyncOpenAI
 
-from a15_memory import MemoryStore
+from t05_memory_crud import MemoryStore
 
 
 client = AsyncOpenAI(

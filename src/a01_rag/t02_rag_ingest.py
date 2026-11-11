@@ -4,7 +4,7 @@
 # 读取文档，切成 Chunk，用 Embedding 模型
 # 转成向量后存入 ChromaDB（持久化），供后续检索。
 #
-# 运行：uv run a02_rag_ingest.py
+# 运行：uv run python src/a01_rag/t02_rag_ingest.py
 # ============================================================
 
 from pathlib import Path
@@ -15,12 +15,13 @@ from sentence_transformers import SentenceTransformer
 
 # 1. 基础配置
 
-# 项目目录 / 原始文档目录 / ChromaDB 持久化目录
-BASE_DIR = Path(__file__).parent
+# 项目根 / 原始文档目录 / ChromaDB 持久化目录
+# data/ 和 chroma_db/ 在项目根目录，不在本文件所在目录
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = BASE_DIR / "data"
 CHROMA_DIR = BASE_DIR / "chroma_db"
 
-# Collection 名称，必须和 a03_rag_query.py 一致
+# Collection 名称，必须和 t03_rag_query.py 一致（RAG 问答脚本，在 src/a01_rag/ 下）
 COLLECTION_NAME = "java_knowledge"
 
 # Chunk 大小（字符数）和相邻 Chunk 的重叠字符数

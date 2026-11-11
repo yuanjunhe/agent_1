@@ -4,7 +4,7 @@
 # 用 OpenAI SDK 调用 DeepSeek 的 OpenAI 兼容接口，
 # 发送一句最简单的对话，验证 API Key、网络、SDK 都没问题。
 #
-# 运行：uv run a01_ping_api.py
+# 运行：uv run python src/a01_rag/t01_ping_api.py
 # ============================================================
 
 import os

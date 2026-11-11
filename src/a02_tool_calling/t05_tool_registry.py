@@ -5,7 +5,7 @@
 # 版本把"按名字找函数 + 执行 + 兜底"封装成 dispatch_tool，
 # 主循环只管调用它。新增 subtract 工具演示第三个工具如何接入。
 #
-# 运行：uv run a08_tool_registry.py
+# 运行：uv run python src/a02_tool_calling/t05_tool_registry.py
 # ============================================================
 
 import os

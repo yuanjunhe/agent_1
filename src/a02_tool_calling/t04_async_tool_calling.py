@@ -5,7 +5,7 @@
 # 改成 async，用 asyncio.gather 同时执行——两个各耗时 2 秒的
 # 工具，串行 4 秒、并行约 2 秒。
 #
-# 运行：uv run a07_async_tool_calling.py
+# 运行：uv run python src/a02_tool_calling/t04_async_tool_calling.py
 # ============================================================
 
 import os
