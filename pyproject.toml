@@ -8,6 +8,7 @@ dependencies = [
     "ipykernel>=7.3.0",
     "jupyter>=1.1.1",
     "langchain>=1.4.0",
+    "mcp[cli]>=2.3.0",
     "openai>=3.8.0",
     "sentence-transformers>=6.0.1",
 ]
