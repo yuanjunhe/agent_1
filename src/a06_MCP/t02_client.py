@@ -7,8 +7,8 @@
 # 2. call_tool         调用工具，结果在 result.content[i].text
 # 3. read_resource     读资源，结果在 result.contents[i].text
 #
-# 运行前先起服务端：uv run mcp dev src/a06_MCP/server.py
-# 运行：uv run python src/a06_MCP/client.py
+# 运行前先起服务端：uv run mcp dev src/a06_MCP/t01_server.py
+# 运行：uv run python src/a06_MCP/t02_client.py
 # ============================================================
 
 import asyncio

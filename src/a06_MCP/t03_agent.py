@@ -7,8 +7,8 @@
 # 链路：list_tools 发现 → convert_mcp_tools 转格式 →
 # Agent Loop 里 call_tool 执行（工具执行发生在 MCP 服务端）。
 #
-# 运行前先起服务端：uv run mcp dev src/a06_MCP/server.py
-# 运行：uv run python src/a06_MCP/agent.py
+# 运行前先起服务端：uv run mcp dev src/a06_MCP/t01_server.py
+# 运行：uv run python src/a06_MCP/t03_agent.py
 # ============================================================
 
 import os

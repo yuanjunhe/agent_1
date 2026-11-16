@@ -7,8 +7,8 @@
 # 工具和资源的区别：工具 = LLM 主动调用做动作，资源 = 客户端
 # 主动读取拿数据（类 GET 请求）。
 #
-# 运行：uv run mcp dev src/a06_MCP/server.py   （带 Inspector 调试）
-# 或：uv run python src/a06_MCP/server.py     （配 HTTP 传输时）
+# 运行：uv run mcp dev src/a06_MCP/t01_server.py   （带 Inspector 调试）
+# 或：uv run python src/a06_MCP/t01_server.py     （配 HTTP 传输时）
 # ============================================================
 
 from mcp.server import MCPServer

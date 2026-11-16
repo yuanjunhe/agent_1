@@ -40,9 +40,9 @@ MCP 三层演进（t01 → t03，每个文件在上一个基础上加一件事�
 
 | 文件 | 角色 | 关键点 |
 |---|---|---|
-| `server.py` | MCP Server | 装饰器注册 Tool / Resource；docstring 即描述，类型注解自动生成 Schema |
-| `client.py` | MCP Client | 三个核心动作：list_tools / call_tool / read_resource，先起服务端再跑 |
-| `agent.py` | MCP Agent | 工具动态发现 + 转成 Tool Calling 格式，换 Server 就换工具，Agent 代码不改 |
+| `t01_server.py` | MCP Server | 装饰器注册 Tool / Resource；docstring 即描述，类型注解自动生成 Schema |
+| `t02_client.py` | MCP Client | 三个核心动作：list_tools / call_tool / read_resource，先起服务端再跑 |
+| `t03_agent.py` | MCP Agent | 工具动态发现 + 转成 Tool Calling 格式，换 Server 就换工具，Agent 代码不改 |
 
 ## 一条主线
 
