@@ -1,3 +1,15 @@
+# ============================================================
+# MCP Client：发现工具、调用工具、读取资源
+#
+# 连接本地起着的 MCP Server（Streamable HTTP 端点），演示
+# MCP 的三个核心动作：
+# 1. list_tools        发现服务端有哪些工具（动态发现，不用写死）
+# 2. call_tool         调用工具，结果在 result.content[i].text
+# 3. read_resource     读资源，结果在 result.contents[i].text
+#
+# 运行前先起服务端：uv run mcp dev src/a06_MCP/server.py
+# 运行：uv run python src/a06_MCP/client.py
+# ============================================================
 
 import asyncio
 from mcp import Client

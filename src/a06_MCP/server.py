@@ -1,3 +1,15 @@
+# ============================================================
+# MCP Server：用装饰器注册 Tool 和 Resource
+#
+# 最小 MCP 服务端：@mcp.tool() 把普通函数暴露成 LLM 可调用的
+# 工具（docstring 即描述，类型注解自动生成参数 Schema）；
+# @mcp.resource(URI) 把函数暴露成可读取的资源。
+# 工具和资源的区别：工具 = LLM 主动调用做动作，资源 = 客户端
+# 主动读取拿数据（类 GET 请求）。
+#
+# 运行：uv run mcp dev src/a06_MCP/server.py   （带 Inspector 调试）
+# 或：uv run python src/a06_MCP/server.py     （配 HTTP 传输时）
+# ============================================================
 
 from mcp.server import MCPServer
 
