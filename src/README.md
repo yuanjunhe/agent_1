@@ -3,7 +3,7 @@
 ```
 调通 LLM → RAG（建库 / 检索问答）→ Tool Calling（闭环 / 循环 / 并行 / 架构 / 健壮性）
         → 两条线合流 → 有状态多轮 Agent → 摘要记忆 → 长期记忆提取 → 记忆存储
-        → 记忆检索 + 记忆注入 → 工具运行时整合 + 套上 Agent Loop
+        → 记忆检索 + 记忆注入 → 工具运行时整合 + 套上 Agent Loop → MCP 标准工具协议
 ```
 
 每个目录的 README 里有该阶段的架构总览（ASCII 流程图）、文件清单和一条主线，从这里进：
@@ -15,6 +15,7 @@
 | [src/a03_agent](src/a03_agent/README.md) | Agent | RAG as a Tool 合流 → 有状态多轮 Agent → 摘要记忆 |
 | [src/a04_memory](src/a04_memory/README.md) | 长期记忆 | LLM 提取 → SQLite 存储（CRUD）→ 检索 → 注入 Agent |
 | [src/a05_agent_runtime](src/a05_agent_runtime/README.md) | 运行时整合 | 工具链路合成可复用模块，Agent 执行统一走 dispatch |
+| [src/a06_MCP](src/a06_MCP/README.md) | MCP | Server 提供工具/资源 → Client 标准协议访问 → Agent 动态发现工具 |
 
 ## 核心概念速查
 
@@ -35,3 +36,5 @@
 | LLM 提取检索关键词 | 用户问题 → 同义词关键词 → 查库；自然语言和存储格式之间的翻译层 |
 | Memory Read | 每轮对话前检索长期记忆，注入 system prompt 供 LLM 参考 |
 | ToolRuntime.dispatch | 查找 → JSON 解析 → 校验 → 授权 → 执行（超时+重试），失败全兜底成 JSON |
+| MCP | 工具抽成独立服务：Server 提供，Client 按协议发现调用，`list_tools` 替代手工注册 |
+| Tool vs Resource | 工具 = LLM 主动调用来做动作；资源 = 客户端主动读取拿数据（类 GET） |
