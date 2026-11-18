@@ -59,8 +59,9 @@ MCP 三层演进（t01 → t03，每个文件在上一个基础上加一件事�
 | `t01_server.py` | MCP Server（数学服务） | 装饰器注册 Tool / Resource；docstring 即描述，类型注解自动生成 Schema |
 | `t02_client.py` | MCP Client | 三个核心动作：list_tools / call_tool / read_resource，先起服务端再跑 |
 | `t03_agent.py` | MCP Agent（单 Server） | 工具动态发现 + 转成 Tool Calling 格式，换 Server 就换工具，Agent 代码不改 |
-| `t04_user_server.py` | MCP Server（用户/订单服务） | 第二个服务占 8001 端口，返回 dict → structured_content |
+| `t04_user_server.py` | MCP Server（用户/订单服务） | 第二个服务占 8001 端口；含固定 Resource、Resource Template、Prompt，返回 dict → structured_content |
 | `t05_multi_server_agent.py` | 多 Server MCP Agent | AsyncExitStack 管多个连接；工具名加 `服务__` 前缀防冲突，路由表分发调用 |
+| `t06_test_resources_prompts.py` | Resource / Prompt 测试 | 客户端读固定资源、模板资源（带参数 URI）、取回 Prompt 模板 |
 
 ## 一条主线
 
