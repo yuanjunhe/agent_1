@@ -50,7 +50,32 @@ MCP 三层演进（t01 → t03，每个文件在上一个基础上加一件事�
        ▼
   Agent Loop 里按路由分发：找到 Client 调原始名，
   结果（或 structured_content）交回 LLM
+
+  t06-t08 资源/Prompt 与 STDIO 传输
+  ─────────────────────────────────────────────
+  t06 直接测 t04 的三类能力：
+    固定 Resource（URI 写死）→ 直接 read
+    Resource Template（URI 带 {参数}）→ 按实际 ID read
+    Prompt → get_prompt 传参取回 messages
+       │
+       ▼
+  t07 综合 Agent：三类能力合体——
+    Resource（公司规则）+ Prompt（分析模板）拼进 system，
+    工具调用走 t05 的路由表，LLM 按规则、按模板分析订单
+       │
+       ▼
+  t08 换 STDIO 传输：Client 拿 StdioServerParameters
+    自己 spawn 服务端子进程，stdin/stdout 收发 JSON-RPC，
+    不占端口；上层协议动作（list_tools/call_tool）不变
 ```
+
+## 两种传输怎么选
+
+| 启动方式 | 传输 | 谁连谁 | 用途 |
+|---|---|---|---|
+| `mcp dev xxx.py` | stdio | Inspector 网页连子进程 | 人工调试服务端（t04 头注释的"调试"命令） |
+| `uv run python t0x_server.py` | streamable-http | t02/t05/t06/t07 连 localhost 端口 | 真实运行，服务端独立起 |
+| Client + `StdioServerParameters` | stdio | 客户端自己 spawn 子进程 | 桌面客户端场景，t08 演示，不用先起服务端 |
 
 ## 文件清单
 
@@ -62,6 +87,8 @@ MCP 三层演进（t01 → t03，每个文件在上一个基础上加一件事�
 | `t04_user_server.py` | MCP Server（用户/订单服务） | 第二个服务占 8001 端口；含固定 Resource、Resource Template、Prompt，返回 dict → structured_content |
 | `t05_multi_server_agent.py` | 多 Server MCP Agent | AsyncExitStack 管多个连接；工具名加 `服务__` 前缀防冲突，路由表分发调用 |
 | `t06_test_resources_prompts.py` | Resource / Prompt 测试 | 客户端读固定资源、模板资源（带参数 URI）、取回 Prompt 模板 |
+| `t07_agent2.py` | 综合 Agent | Resource 规则 + Prompt 模板拼进 system，工具走 t05 路由表，三类能力一个 Agent 全用上 |
+| `t08_test_stdio.py` | STDIO 客户端测试 | StdioServerParameters 让 Client 自己拉起服务端子进程，不占端口、不用先起服务端 |
 
 ## 一条主线
 
@@ -69,3 +96,4 @@ a05 把工具执行整合成可复用模块，但工具还是**自己写、进�
 
 > 关键认知：**MCP 对 Agent 的意义 = 工具的动态发现 + 进程解耦**——`list_tools` 替代手工注册，`convert_mcp_tools` 那一步翻译就是 Tool Schema 和 MCP Schema 之间的桥。
 > 踩坑记录：`read_resource` 返回 `ReadResourceResult`，内容在 `.contents[i].text`；`call_tool` 的结果在 `.content[i].text`。直接迭代 pydantic 模型拿到的是 `(字段名, 值)` 元组，不是内容。
+> 传输坑：`mcp dev` / `mcp run` 默认 stdio（挂在父进程下，不占端口），HTTP 客户端连不上——t02/t05/t06/t07 必须用 `uv run python` 直跑服务端（脚本里显式 `transport="streamable-http"`）；反过来 t08 的 stdio 客户端也连不上 HTTP 起的服务端，两边传输要对上。
