@@ -1,11 +1,12 @@
 # ============================================================
 # 第二个 MCP Server：用户/订单查询服务（模拟业务数据）
 #
-# 配合多 Server Agent（t05）演示跨服务调用：和 t01_server
+# 配合多 Server Agent（t05）/ 综合测试（t06 / t07）：和 t01_server
 # 分开起，占 8001 端口；两个工具返回 dict，t05 里会拿到
 # structured_content 而不是纯文本。
 #
-# 运行：uv run mcp dev src/a06_MCP/t04_user_server.py
+# 调试（Inspector 网页）：uv run mcp dev src/a06_MCP/t04_user_server.py
+# 供 HTTP 客户端连接：  uv run python src/a06_MCP/t04_user_server.py
 # ============================================================
 
 from mcp.server import MCPServer

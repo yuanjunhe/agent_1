@@ -8,7 +8,8 @@
 # 3. Prompt：服务端预置的提示词模板（analyze_order），get_prompt
 #    传参取回 messages，可直接当 LLM 的输入
 #
-# 运行前先起服务端：uv run mcp dev src/a06_MCP/t04_user_server.py
+# 运行前先起服务端：uv run python src/a06_MCP/t04_user_server.py
+# （mcp dev 起的是 stdio + Inspector，HTTP 客户端连不上）
 # 运行：uv run python src/a06_MCP/t06_test_resources_prompts.py
 # ============================================================
 

@@ -8,9 +8,10 @@
 #    重名（math__add / user__get_user_info），LLM 工具名到
 #    (Client, 原始工具名) 的映射，调用时按路由分发
 #
-# 运行前先起两个服务端：
-#   uv run mcp dev src/a06_MCP/t01_server.py
-#   uv run mcp dev src/a06_MCP/t04_user_server.py
+# 运行前先起两个服务端（各占一个终端）：
+#   uv run python src/a06_MCP/t01_server.py
+#   uv run python src/a06_MCP/t04_user_server.py
+# （mcp dev 起的是 stdio + Inspector，HTTP 客户端连不上）
 # 运行：uv run python src/a06_MCP/t05_multi_server_agent.py
 # ============================================================
 

@@ -48,4 +48,6 @@ def get_user_profile() -> str:
 
 
 if __name__ == "__main__":
-    mcp.run()
+    # 直接运行时用 HTTP 传输，占 8000 端口（stdio 传输是给
+    # mcp dev / 桌面客户端这种"父进程拉起子进程"的场景用的）
+    mcp.run(transport="streamable-http", port=8000)
